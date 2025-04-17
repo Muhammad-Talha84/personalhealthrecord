@@ -1,0 +1,91 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 0;
+}
+.back-button {
+  background: #333;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.container {
+  width: 90%;
+  max-width: 400px;
+  margin: 20px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  text-align: center;
+  color: #0044cc;
+}
+
+.form label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+.form input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.radio-group {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #333;
+}
+
+.tab-group {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.tab {
+  padding: 8px 16px;
+  margin: 0 5px;
+  border: none;
+  cursor: pointer;
+  background: #ccc;
+  border-radius: 5px;
+}
+
+.tab.active {
+  background: orange;
+  color: white;
+}
+
+.chart-container {
+  text-align: center;
+  margin-top: 20px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

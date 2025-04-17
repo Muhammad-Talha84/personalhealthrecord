@@ -1,0 +1,118 @@
+.bloodpressurecontainer {
+  width: 100%;
+  margin: 30px auto;
+  padding: 25px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.card {
+  padding: 20px;
+  background: linear-gradient(135deg, #007bff, #00d4ff);
+  border-radius: 10px;
+  color: white;
+}
+
+.card h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+input {
+  display: block;
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin: 12px auto;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  font-size: 16px;
+  text-align: center;
+}
+
+button {
+  padding: 12px;
+  border: none;
+  background: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+.back-button {
+  margin-top: 15px;
+  display: inline-block;
+  padding: 10px 15px;
+  background: #ff4b4b;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.back-button:hover {
+  background: #d43f3f;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+  background: #ddd;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+.tabs button.active {
+  background: #007bff;
+  color: white;
+}
+
+.graph-container {
+  margin-top: 20px;
+  width: 100%;
+  height: 350px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 16px;
+}
+
+th {
+  background: #007bff;
+  color: white;
+}

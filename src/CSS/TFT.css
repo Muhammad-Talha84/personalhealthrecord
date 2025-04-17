@@ -1,0 +1,18 @@
+.tftContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #f4f4f4;
+}
+.back-button {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #333;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}

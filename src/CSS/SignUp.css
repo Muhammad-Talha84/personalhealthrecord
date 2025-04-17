@@ -1,0 +1,19 @@
+.signupouter-container {
+  background-color: #12268e;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  height: 100vh;
+  padding-top: 3.5px;
+  overflow: hidden;
+}
+
+.singuprounded-container {
+  border: 2px solid black;
+  border-radius: 50px;
+  width: 98.5%;
+  height: 98.5%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #19a8e1;
+  align-self: center;
+}
