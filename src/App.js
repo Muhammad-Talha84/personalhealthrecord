@@ -21,6 +21,7 @@ import AddVital from "./Components/AddVital";
 import HeartRate from "./Components/HeartRate";
 import Cholesterol from "./Components/Cholesterol";
 import ReportsDetail from "./Components/ReportsDetail";
+import AbnormalReports from "./Components/AbnormalReports";
 function App() {
   return (
     <Router>
@@ -67,6 +68,8 @@ function App() {
         <Route path="/cholestrol" element={<Cholesterol />} />
         {/* Reports Detail */}
         <Route path="/reportsdetail" element={<ReportsDetail />} />
+        {/* abnormal reports  */}
+        <Route path="/abnormal" element={<AbnormalReports />} />
       </Routes>
     </Router>
   );

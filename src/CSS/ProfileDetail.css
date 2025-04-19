@@ -75,3 +75,20 @@ button:hover {
 .temperatureChart svg {
   max-width: 100%;
 }
+.abnormalButton {
+  display: block;
+  width: 100%;
+  padding: 10px 0;
+  margin-top: 15px;
+  background: #dc3545;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.abnormalButton:hover {
+  background: #b52a37;
+}

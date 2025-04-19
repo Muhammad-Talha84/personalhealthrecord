@@ -1,9 +1,8 @@
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function ReportsDetail() {
   const { state } = useLocation();
-  const navigate = useNavigate();
 
   // The grouped report object containing testName and an array of reports
   const reportGroup = state?.report;
@@ -11,17 +10,6 @@ export default function ReportsDetail() {
   if (!reportGroup) {
     return (
       <div style={{ padding: 20 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-          }}
-        >
-          ← Back
-        </button>
         <h2>Oops, report not found</h2>
         <p>
           It looks like there’s no report data to show. Make sure you clicked a

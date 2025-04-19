@@ -127,7 +127,7 @@ const RFT = () => {
 
       alert("Renal Function Test saved successfully.");
     } catch (error) {
-      console.error("Error inserting TFT record:", error);
+      console.error("Error inserting RFT record:", error);
     }
   };
   return (

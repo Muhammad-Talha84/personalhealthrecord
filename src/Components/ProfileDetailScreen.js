@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../CSS/ProfileDetail.css";
-import { AiOutlineArrowLeft } from "react-icons/ai";
 
 import useDatabase from "../Components/useDatabase";
 import {
@@ -139,6 +138,12 @@ const ProfileDetailScreen = () => {
             <p>
               <strong>Weight:</strong> {profile.weight}
             </p>
+            <button
+              className="abnormalButton"
+              onClick={() => navigate("/abnormal", { state: { profile } })}
+            >
+              View Abnormal Reports
+            </button>
           </>
         ) : (
           <p>No Profile Selected</p>
@@ -178,7 +183,7 @@ const ProfileDetailScreen = () => {
           </button>
 
           {/* Dynamic Vital Chart */}
-          {selectedVitalType && chartData.length > 0 && (
+          {/* {selectedVitalType && chartData.length > 0 && (
             <div className="vitalChart">
               <h3>{selectedVitalType} Trend</h3>
               <LineChart width={600} height={300} data={chartData}>
@@ -206,7 +211,7 @@ const ProfileDetailScreen = () => {
                 />
               </LineChart>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Lab Reports */}
