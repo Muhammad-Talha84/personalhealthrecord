@@ -19,9 +19,11 @@ import LFT from "./Components/LFT";
 import LipidProfile from "./Components/LipidProfile";
 import AddVital from "./Components/AddVital";
 import HeartRate from "./Components/HeartRate";
-import Cholesterol from "./Components/Cholesterol";
 import ReportsDetail from "./Components/ReportsDetail";
 import AbnormalReports from "./Components/AbnormalReports";
+import Electrolytes from "./Components/Electrolytes";
+import CompareScreen from "./Components/CompareScreen";
+import LabParameterGraph from "./Components/LabParameterGraph";
 function App() {
   return (
     <Router>
@@ -64,12 +66,16 @@ function App() {
         <Route path="/lipid" element={<LipidProfile />} />
         {/* Heart Rate */}
         <Route path="/heart" element={<HeartRate />} />
-        {/* Cholesterol */}
-        <Route path="/cholestrol" element={<Cholesterol />} />
+        {/* Electrolytes */}
+        <Route path="/electrolyte" element={<Electrolytes />} />
         {/* Reports Detail */}
         <Route path="/reportsdetail" element={<ReportsDetail />} />
         {/* abnormal reports  */}
         <Route path="/abnormal" element={<AbnormalReports />} />
+        {/* Comapare Screen */}
+        <Route path="/compare" element={<CompareScreen />} />
+        {/* lab parameter graph */}
+        <Route path="/graph" element={<LabParameterGraph />} />
       </Routes>
     </Router>
   );

@@ -1,0 +1,147 @@
+/* AddProfile.css */
+
+/* Global styles for Add Profile */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #fff);
+}
+
+/* Container styling */
+.addProfileContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+/* Title styling */
+.addProfileTitle {
+  font-size: 32px;
+  font-weight: bold;
+  color: #0077b6;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Form styling */
+.addProfileForm {
+  background: #ffffff;
+  padding: 30px 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Form field */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+/* Label */
+.formGroup label {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* Inputs and Selects */
+.formGroup input,
+.formGroup select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+  background: #f9f9f9;
+  transition: border-color 0.3s;
+  width: 50%; /* Ensure inputs take up the full width */
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: #0077b6;
+}
+
+/* Gender radio buttons */
+.genderOptions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.genderOptions label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Button */
+.submitButton {
+  width: 100%;
+  padding: 12px;
+  background: #0077b6;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+.submitButton:hover {
+  background: #005f8a;
+}
+
+/* Icon Styling */
+.formGroup {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.formIcon {
+  color: #0077b6;
+  font-size: 24px; /* Adjusted icon size */
+  margin-right: 10px; /* Space between icon and input */
+  top: 10px;
+}
+
+.formGroup input,
+.formGroup select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+  background: #f9f9f9;
+  transition: border-color 0.3s;
+  width: 50%;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: #0077b6;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .addProfileTitle {
+    font-size: 26px;
+  }
+
+  .addProfileForm {
+    padding: 20px;
+  }
+}

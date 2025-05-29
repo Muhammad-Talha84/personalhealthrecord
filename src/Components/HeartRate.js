@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
 
 const HeartRate = () => {
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [bpm, setBpm] = useState("");
-  const [dataRecords, setDataRecords] = useState([]);
-  const navigate = useNavigate();
   const location = useLocation();
   const { profile } = location.state || {}; // Get selected profile
   const { db, saveDatabase } = useDatabase();
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getNowTime = () => new Date().toTimeString().slice(0, 5);
+  const [date, setDate] = useState(getToday());
+  const [time, setTime] = useState(getNowTime());
+  const [maxTime, setMaxTime] = useState(getNowTime());
+  const [bpm, setBpm] = useState("");
+  const [dataRecords, setDataRecords] = useState([]);
 
   // Load heart rate records from the database for this profile
   const loadData = () => {
@@ -37,17 +39,32 @@ const HeartRate = () => {
       loadData();
     }
   }, [db, profile]);
-
+  useEffect(() => {
+    const today = getToday();
+    const nowTime = getNowTime();
+    if (date === today) {
+      setMaxTime(nowTime);
+      if (time > nowTime) setTime(nowTime);
+    } else {
+      setMaxTime("23:59");
+    }
+  }, [date, time]);
   const handleAdd = (e) => {
     e.preventDefault();
 
     // Check that all fields are provided
     if (!date || !time || !bpm || !db || !profile) return;
+    const selected = new Date(`${date}T${time}`);
+    const now = new Date();
+    if (selected > now) {
+      alert("Cannot record a future date/time");
+      return;
+    }
 
     // Convert bpm to a float and validate its range
     const bpmValue = parseFloat(bpm);
-    if (isNaN(bpmValue) || bpmValue < 40 || bpmValue > 200) {
-      alert("BPM value should be between 40 and 200");
+    if (isNaN(bpmValue) || bpmValue < 40 || bpmValue > 100) {
+      alert("BPM value should be between 40 and 100");
       return;
     }
 
@@ -61,8 +78,8 @@ const HeartRate = () => {
       saveDatabase();
       // Reload records and clear form
       loadData();
-      setDate("");
-      setTime("");
+      setDate(getToday());
+      setTime(getNowTime());
       setBpm("");
     } catch (error) {
       console.error("Error inserting heart rate record:", error);
@@ -70,11 +87,11 @@ const HeartRate = () => {
   };
 
   // Prepare chart data: include a combined label and convert value to a number.
-  const chartData = dataRecords.map((record) => ({
-    ...record,
-    dateTime: `${record.date} ${record.time}`,
-    bpm: parseFloat(record.value),
-  }));
+  // const chartData = dataRecords.map((record) => ({
+  //   ...record,
+  //   dateTime: `${record.date} ${record.time}`,
+  //   bpm: parseFloat(record.value),
+  // }));
 
   return (
     <div className="temp-container">
@@ -87,6 +104,7 @@ const HeartRate = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              max={getToday()}
               required
             />
           </div>
@@ -96,6 +114,7 @@ const HeartRate = () => {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
+              max={maxTime}
               required
             />
           </div>

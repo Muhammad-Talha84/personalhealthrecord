@@ -4,8 +4,12 @@ import useDatabase from "../Components/useDatabase";
 import "../CSS/TFT.css";
 
 const TFT = () => {
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getNowTime = () => new Date().toTimeString().slice(0, 5);
+
+  const [date, setDate] = useState(getToday());
+  const [time, setTime] = useState(getNowTime());
+  const [maxTime, setMaxTime] = useState(getNowTime());
   const [t3, setT3] = useState("");
   const [t4, setT4] = useState("");
   const [tsh, setTSH] = useState("");
@@ -14,7 +18,7 @@ const TFT = () => {
   const { profile } = location.state || {}; // selected profile from state
   const { db, saveDatabase } = useDatabase();
 
-  const testName = "ThyroidFunctionTest";
+  const testName = "TFT";
 
   const loadData = () => {
     if (db && profile) {
@@ -43,11 +47,25 @@ const TFT = () => {
       loadData();
     }
   }, [db, profile]);
-
+  useEffect(() => {
+    const today = getToday();
+    const nowTime = getNowTime();
+    if (date === today) {
+      setMaxTime(nowTime);
+      if (time > nowTime) setTime(nowTime);
+    } else {
+      setMaxTime("23:59");
+    }
+  }, [date, time]);
   const handleAdd = (e) => {
     e.preventDefault();
     if (!date || !time || !t3 || !t4 || !tsh || !db || !profile) return;
-
+    const selected = new Date(`${date}T${time}`);
+    const now = new Date();
+    if (selected > now) {
+      alert("Cannot record a future date/time");
+      return;
+    }
     const parameters = [
       {
         parameter: "T3",
@@ -101,8 +119,8 @@ const TFT = () => {
       loadData();
 
       // Clear form
-      setDate("");
-      setTime("");
+      setDate(getToday());
+      setTime(getNowTime());
       setT3("");
       setT4("");
       setTSH("");
@@ -123,6 +141,7 @@ const TFT = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              max={getToday()}
               required
             />
           </div>
@@ -132,6 +151,7 @@ const TFT = () => {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
+              max={maxTime}
               required
             />
           </div>

@@ -4,7 +4,7 @@ import ThermostatIcon from "@mui/icons-material/Thermostat";
 
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import "../CSS/AddVital.css";
-import { AiOutlineArrowLeft } from "react-icons/ai";
+
 const AddVital = () => {
   const predefinedReports = [
     {
@@ -19,10 +19,6 @@ const AddVital = () => {
       name: "Blood Pressure",
       icon: <MonitorHeartIcon style={{ fontSize: "24px", color: "red" }} />,
       route: "/bp",
-    },
-    {
-      name: "Cholesterol Level",
-      route: "/cholestrol",
     },
   ];
   const navigate = useNavigate();

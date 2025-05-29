@@ -1,19 +1,105 @@
+/* Outer Container */
 .signupouter-container {
-  background-color: #12268e;
+  background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%);
   display: flex;
-  flex-direction: column;
-  text-align: center;
-  height: 100vh;
-  padding-top: 3.5px;
-  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  height: 96.9vh;
+  padding: 10px;
 }
 
+/* Rounded Box */
 .singuprounded-container {
-  border: 2px solid black;
-  border-radius: 50px;
-  width: 98.5%;
-  height: 98.5%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #19a8e1;
-  align-self: center;
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+/* Heading */
+.singuprounded-container h1 {
+  font-size: 2rem;
+  color: #333333;
+  margin-bottom: 30px;
+}
+
+/* Form and Input Fields */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Common wrapper for input + icon */
+form div {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Input fields */
+form input {
+  width: 100%;
+  padding: 12px 15px 12px 45px; /* left padding for icon space */
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  font-size: 1rem;
+  background-color: #f7f7f7;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+/* Focused input */
+form input:focus {
+  border-color: #6c63ff;
+}
+
+/* Icons inside input wrapper */
+form svg {
+  position: absolute;
+  top: 30%;
+  left: 25px;
+  transform: translateY(-50%);
+  color: #6c63ff;
+  font-size: 22px;
+}
+
+/* Button */
+.button {
+  width: 100%;
+  background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+  border: none;
+  padding: 14px;
+  color: #fff;
+  font-size: 1.1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.button:hover {
+  background: linear-gradient(135deg, #48c6ef 0%, #6c63ff 100%);
+}
+
+/* Error message styling */
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+
+/* Already have account link */
+.singuprounded-container p {
+  font-size: 0.9rem;
+  margin-top: 20px;
+}
+
+.singuprounded-container a {
+  color: #6c63ff;
+  font-weight: bold;
+  text-decoration: none;
 }

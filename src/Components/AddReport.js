@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import BloodtypeIcon from "@mui/icons-material/Bloodtype";
 
 import "../CSS/AddReport.css";
-import { AiOutlineArrowLeft } from "react-icons/ai";
+
 const AddReport = () => {
   const predefinedReports = [
     {

@@ -10,9 +10,8 @@
 
 .card {
   padding: 20px;
-  background: linear-gradient(135deg, #007bff, #00d4ff);
   border-radius: 10px;
-  color: white;
+  color: #333;
 }
 
 .card h2 {

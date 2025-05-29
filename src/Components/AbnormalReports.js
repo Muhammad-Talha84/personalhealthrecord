@@ -1,4 +1,3 @@
-// src/components/AbnormalReports.js
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
@@ -8,8 +7,6 @@ export default function AbnormalReports() {
   const { state } = useLocation();
   const { profile } = state || {};
   const { db } = useDatabase();
-
-  // filter state
   const [searchName, setSearchName] = useState("");
   const [rangeOption, setRangeOption] = useState("5m"); // '1m', '5m', 'custom'
   const [fromDate, setFromDate] = useState("");
@@ -17,7 +14,7 @@ export default function AbnormalReports() {
   const [abnormalReports, setAbnormalReports] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
-  const defaultTests = ["BloodCP", "LFT", "TFT"];
+  const defaultTests = ["BloodCP", "LFT", "TFT", "RFT"];
   const formatDate = (d) => d.toISOString().split("T")[0];
   const today = formatDate(new Date());
 

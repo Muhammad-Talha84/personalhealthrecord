@@ -60,86 +60,61 @@ const SignUp = () => {
       <div className="singuprounded-container">
         <h1>CREATE AN ACCOUNT</h1>
         <form onSubmit={handleSignup}>
-          <PersonIcon
-            style={{
-              transform: "translateY(105%)",
-              color: "blue",
-              marginRight: "280px",
-            }}
-          />
-          <input
-            style={{ marginTop: "-15px", width: "300px" }}
-            type="text"
-            placeholder="Enter First Name"
-            value={fname}
-            onChange={(e) => setFname(e.target.value)}
-            required
-          />
-
-          <PersonIcon
-            style={{
-              transform: "translateY(145%)",
-              color: "blue",
-              marginRight: "280px",
-            }}
-          />
-          <input
-            style={{ marginTop: "-5px", width: "300px" }}
-            type="text"
-            placeholder="Enter Last Name"
-            value={lname}
-            onChange={(e) => setLname(e.target.value)}
-            required
-          />
-
-          <Email
-            style={{
-              transform: "translateY(145%)",
-              color: "blue",
-              marginRight: "280px",
-            }}
-          />
-          <input
-            style={{ marginTop: "-5px", width: "300px" }}
-            type="email"
-            placeholder="Enter Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <LockIcon
-            style={{
-              transform: "translateY(145%)",
-              color: "blue",
-              marginRight: "280px",
-            }}
-          />
-          <input
-            style={{ marginTop: "-5px", width: "300px" }}
-            type="password"
-            placeholder="Enter Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-
-          <LockIcon
-            style={{
-              transform: "translateY(145%)",
-              color: "blue",
-              marginRight: "280px",
-            }}
-          />
-          <input
-            style={{ marginTop: "-5px", width: "300px" }}
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-
+          <div>
+            <PersonIcon />
+            <input
+              style={{ marginTop: "-15px", width: "300px" }}
+              type="text"
+              placeholder="Enter First Name"
+              value={fname}
+              onChange={(e) => setFname(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <PersonIcon />
+            <input
+              style={{ marginTop: "-5px", width: "300px" }}
+              type="text"
+              placeholder="Enter Last Name"
+              value={lname}
+              onChange={(e) => setLname(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Email />
+            <input
+              style={{ marginTop: "-5px", width: "300px" }}
+              type="email"
+              placeholder="Enter Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <LockIcon />
+            <input
+              style={{ marginTop: "-5px", width: "300px" }}
+              type="password"
+              placeholder="Enter Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <LockIcon />
+            <input
+              style={{ marginTop: "-5px", width: "300px" }}
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
           <button type="submit" className="button">
             Create
           </button>

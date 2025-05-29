@@ -3,6 +3,13 @@ import { useLocation } from "react-router-dom";
 import "../CSS/Lft.css";
 import useDatabase from "../Components/useDatabase";
 const LFT = () => {
+  const location = useLocation();
+  const { profile } = location.state || {}; // selected profile from state
+  const { db, saveDatabase } = useDatabase();
+  const testName = "LFT";
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getNowTime = () => new Date().toTimeString().slice(0, 5);
+
   const [directBilirubin, setDirectBilirubin] = useState("");
   const [indirectBilirubin, setIndirectBilirubin] = useState("");
   const [totalBilirubin, setTotalBilirubin] = useState("");
@@ -11,12 +18,9 @@ const LFT = () => {
   const [alkalinePhosphatase, setAlkalinePhosphatase] = useState("");
   const [gamma, setGamma] = useState("");
   const [data, setData] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const location = useLocation();
-  const { profile } = location.state || {}; // selected profile from state
-  const { db, saveDatabase } = useDatabase();
-  const testName = "LiverFunctionTest";
+  const [date, setDate] = useState(getToday());
+  const [time, setTime] = useState(getNowTime());
+  const [maxTime, setMaxTime] = useState(getNowTime());
 
   const loadData = () => {
     if (db && profile) {
@@ -45,6 +49,16 @@ const LFT = () => {
       loadData();
     }
   }, [db, profile]);
+  useEffect(() => {
+    const today = getToday();
+    const nowTime = getNowTime();
+    if (date === today) {
+      setMaxTime(nowTime);
+      if (time > nowTime) setTime(nowTime);
+    } else {
+      setMaxTime("23:59");
+    }
+  }, [date, time]);
   const handleAdd = (e) => {
     e.preventDefault();
     if (
@@ -59,6 +73,12 @@ const LFT = () => {
       !time
     )
       return;
+    const selected = new Date(`${date}T${time}`);
+    const now = new Date();
+    if (selected > now) {
+      alert("Cannot record a future date/time");
+      return;
+    }
     const parameters = [
       {
         parameter: "Direct Bilirubin",
@@ -151,8 +171,8 @@ const LFT = () => {
       setALT("");
       setAlkalinePhosphatase("");
       setGamma("");
-      setDate("");
-      setTime("");
+      setDate(getToday());
+      setTime(getNowTime());
       alert("Liver Function Test saved successfully.");
     } catch (error) {
       console.error("Error inserting LFT record:", error);
@@ -170,6 +190,7 @@ const LFT = () => {
             placeholder="Date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            max={getToday()}
           />
         </label>
         <label>
@@ -179,6 +200,7 @@ const LFT = () => {
             placeholder="Time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
+            max={maxTime}
           />
         </label>
         <label>

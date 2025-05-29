@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../CSS/Profile.css";
-import { AiOutlineArrowLeft } from "react-icons/ai";
 import useDatabase from "../Components/useDatabase";
 const Profile = () => {
   const [profiles, setProfiles] = useState([]);
@@ -41,9 +40,7 @@ const Profile = () => {
         <div className="btnProfile">
           <button onClick={() => navigate("/add")}>Add Profile</button>
         </div>
-        {/* <div className="btnAddReport">
-          <button onClick={() => navigate("/addreport")}>Add Vital</button>
-        </div> */}
+    
         <div className="profiles-list">
           {profiles.length > 0 ? (
             profiles.map((profile) => (

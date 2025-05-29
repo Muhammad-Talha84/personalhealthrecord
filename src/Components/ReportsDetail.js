@@ -1,129 +1,97 @@
+// ReportsDetail.js
 import React from "react";
 import { useLocation } from "react-router-dom";
 
 export default function ReportsDetail() {
   const { state } = useLocation();
 
-  // The grouped report object containing testName and an array of reports
-  const reportGroup = state?.report;
+  const { profile, testName, dateMap } = state || {};
 
-  if (!reportGroup) {
+  if (!dateMap || !testName) {
     return (
       <div style={{ padding: 20 }}>
         <h2>Oops, report not found</h2>
-        <p>
-          It looks like there’s no report data to show. Make sure you clicked a
-          report from the previous screen (don’t reload this page directly).
-        </p>
+        <p>Make sure you clicked a test from the previous screen.</p>
       </div>
     );
   }
 
-  // Destructure the grouped report: testName + array of individual parameters
-  const { testName, date, time, reports } = reportGroup;
+  // 1) collect and sort all dates
+  const dates = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
 
-  // Assume each item in `reports` shares the same profileName, date, and time
-  const { profileName } = reports[0];
+  // 2) collect *all* parameters across all dates
+  const allParams = Array.from(
+    new Set(dates.flatMap((date) => dateMap[date].map((r) => r.parameter)))
+  );
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        maxWidth: "500px",
-        margin: "0 auto",
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-      }}
-    >
-      {/* Test Name as heading */}
-      <h2 style={{ margin: "0 0 10px 0", textAlign: "center" }}>{testName}</h2>
+    <div style={{ padding: 20, maxWidth: 800, margin: "auto" }}>
+      <h2 style={{ textAlign: "center" }}>{testName}</h2>
+      <p style={{ textAlign: "center" }}>
+        <strong>Name:</strong> {profile.name}
+      </p>
 
-      {/* Patient / Profile Info */}
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <p style={{ margin: "4px 0" }}>
-          <strong>Name:</strong> {profileName}
-        </p>
-        <p style={{ margin: "4px 0" }}>
-          <strong>Test Date:</strong> {date}
-        </p>
-        <p style={{ margin: "4px 0" }}>
-          <strong>Test Time:</strong> {time}
-        </p>
-      </div>
-
-      {/* Table-like structure for results */}
-      {reports.length > 0 ? (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-          }}
-        >
-          <thead>
-            <tr
-              style={{
-                backgroundColor: "#f0f0f0",
-                textAlign: "left",
-              }}
-            >
-              <th
-                style={{
-                  padding: "8px",
-                  fontWeight: "bold",
-                  borderTopLeftRadius: "4px",
-                }}
-              >
-                Test
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: 20,
+        }}
+      >
+        <thead>
+          <tr style={{ backgroundColor: "#f0f0f0" }}>
+            <th style={{ padding: 8 }}>Parameter</th>
+            {dates.map((date) => (
+              <th key={date} style={{ padding: 8 }}>
+                {date}
               </th>
-              <th style={{ padding: "8px", fontWeight: "bold" }}>Result</th>
-              <th style={{ padding: "8px", fontWeight: "bold" }}>Unit</th>
-              <th
-                style={{
-                  padding: "8px",
-                  fontWeight: "bold",
-                  borderTopRightRadius: "4px",
-                }}
-              >
-                Ref. Value
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reports.map((entry, index) => {
-              const resultNum = parseFloat(entry.result);
-              const minNum = parseFloat(entry.minValue);
-              const maxNum = parseFloat(entry.maxValue);
-              const isAbnormal = resultNum < minNum || resultNum > maxNum;
+            ))}
+            <th style={{ padding: 8 }}>Ref. Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          {allParams.map((param) => {
+            // find the reference range (assume it's same across dates)
+            const anyRpt = dates
+              .map((d) => dateMap[d].find((r) => r.parameter === param))
+              .find(Boolean);
+            const refRange = anyRpt
+              ? `${anyRpt.minValue}–${anyRpt.maxValue}`
+              : "";
 
-              // Alternate background color or use the same color for each row
-              const rowStyle = {
-                backgroundColor: "#e8f4fc", // Light blue as per your screenshot
-              };
+            return (
+              <tr key={param}>
+                <td style={{ padding: 8 }}>{param}</td>
 
-              return (
-                <tr key={entry.id || index} style={rowStyle}>
-                  <td style={{ padding: "8px" }}>{entry.parameter}</td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      color: isAbnormal ? "red" : "black",
-                      fontWeight: isAbnormal ? "bold" : "normal",
-                    }}
-                  >
-                    {entry.result}
-                  </td>
-                  <td style={{ padding: "8px" }}>{entry.unit}</td>
-                  <td style={{ padding: "8px" }}>
-                    {entry.minValue} - {entry.maxValue}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : (
-        <p>No test results available.</p>
-      )}
+                {dates.map((date) => {
+                  const rpt = dateMap[date].find((r) => r.parameter === param);
+                  const val = rpt ? rpt.result : "-";
+                  const unit = rpt ? rpt.unit : "";
+
+                  // mark abnormal if outside range
+                  let style = {};
+                  if (rpt) {
+                    const num = parseFloat(rpt.result);
+                    const lo = parseFloat(rpt.minValue);
+                    const hi = parseFloat(rpt.maxValue);
+                    if (num < lo || num > hi) {
+                      style = { backgroundColor: "#ffe6e6", color: "red" };
+                    }
+                  }
+
+                  return (
+                    <td key={date} style={{ padding: 8, ...style }}>
+                      {val} {unit}
+                    </td>
+                  );
+                })}
+
+                <td style={{ padding: 8 }}>{refRange}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -1,72 +1,59 @@
-// useDatabase.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import initSqlJs from "sql.js";
 
 const DATABASE_KEY = "myHealthDatabase";
+const WASM_FILE = "/sql-wasm.wasm";
 
 function useDatabase() {
   const [db, setDb] = useState(null);
 
-  useEffect(() => {
-    async function initDb() {
-      // Initialize sql.js with the location of the wasm file
-      const SQL = await initSqlJs({
-        locateFile: (file) => `/sql-wasm.wasm`,
-      });
+  // Initialize the database instance
+  const initDb = useCallback(async () => {
+    // Load and configure sql.js
+    const SQL = await initSqlJs({
+      locateFile: (file) => WASM_FILE,
+    });
 
-      let dbInstance;
-      const savedDb = localStorage.getItem(DATABASE_KEY);
-      if (savedDb) {
-        // Decode the saved base64 string into a Uint8Array
-        const binaryString = atob(savedDb);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        dbInstance = new SQL.Database(bytes);
-      } else {
-        // No saved database, so create a new one
-        dbInstance = new SQL.Database();
-        // Create a "users" table to store signup data
-        dbInstance.run(`
-          CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fname TEXT,
-            lname TEXT,
-            email TEXT UNIQUE,
-            password TEXT
-          );
-        `);
-      }
+    let dbInstance;
+    const savedDb = localStorage.getItem(DATABASE_KEY);
 
-      // Always run these commands to ensure the tables exist.
-      dbInstance.run(`
-      CREATE TABLE IF NOT EXISTS Vitals (
+    if (savedDb) {
+      // Restore from localStorage
+      const bytes = Uint8Array.from(atob(savedDb), (c) => c.charCodeAt(0));
+      dbInstance = new SQL.Database(bytes);
+    } else {
+      // Create a new database
+      dbInstance = new SQL.Database();
+    }
+
+    // SQL statements to create tables if they don't exist
+    const createTables = [
+      `CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fname TEXT,
+        lname TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+      );`,
+
+      `CREATE TABLE IF NOT EXISTS Vitals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         profileName TEXT,
-        vitalName TEXT, -- new column
+        vitalName TEXT,
         type TEXT,
-        value TEXT,
+        value REAL,
         unit TEXT,
         date TEXT,
-        time TEXT
-      );
-      
-      `);
+        time TEXT,
+        minValue REAL,
+        maxValue REAL
+      );`,
 
-      // If the table existed before without vitalName, add it
-      try {
-        dbInstance.run(`ALTER TABLE Vitals ADD COLUMN vitalName TEXT;`);
-      } catch (e) {
-        // column already exists → ignore
-      }
-      dbInstance.run(`
-      CREATE TABLE IF NOT EXISTS LabReports (
+      `CREATE TABLE IF NOT EXISTS LabReports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         profileName TEXT,
         testName TEXT,
-        parameter TEXT, -- T3, T4, TSH etc.
+        parameter TEXT,
         result TEXT,
         unit TEXT,
         referenceValue TEXT,
@@ -74,31 +61,42 @@ function useDatabase() {
         time TEXT,
         minValue REAL,
         maxValue REAL
-      );
-      
-      `);
-      // If the table existed before without vitalName, add it
-      try {
-        dbInstance.run(`ALTER TABLE LabReports ADD COLUMN parameter TEXT;`);
-      } catch (e) {
-        // column already exists → ignore
-      }
+      );`,
+    ];
 
-      setDb(dbInstance);
-    }
-    initDb();
+    createTables.forEach((sql) => dbInstance.run(sql));
+
+    // Backwards-compatibility: add columns if missing
+    const alterStatements = [
+      `ALTER TABLE Vitals ADD COLUMN vitalName TEXT;`,
+      `ALTER TABLE Vitals ADD COLUMN minValue REAL;`,
+      `ALTER TABLE Vitals ADD COLUMN maxValue REAL;`,
+      `ALTER TABLE LabReports ADD COLUMN parameter TEXT;`,
+    ];
+
+    alterStatements.forEach((stmt) => {
+      try {
+        dbInstance.run(stmt);
+      } catch {
+        // ignore if column already exists
+      }
+    });
+
+    setDb(dbInstance);
   }, []);
 
-  // Function to persist the database state to localStorage
-  const saveDatabase = () => {
+  // On mount, initialize the DB
+  useEffect(() => {
+    initDb();
+  }, [initDb]);
+
+  // Persist database to localStorage
+  const saveDatabase = useCallback(() => {
     if (!db) return;
     const data = db.export();
-    const binaryString = Array.from(data)
-      .map((byte) => String.fromCharCode(byte))
-      .join("");
-    const base64 = btoa(binaryString);
+    const base64 = btoa(String.fromCharCode(...data));
     localStorage.setItem(DATABASE_KEY, base64);
-  };
+  }, [db]);
 
   return { db, saveDatabase };
 }

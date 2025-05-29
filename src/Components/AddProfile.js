@@ -1,14 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  AiOutlineUser,
-  AiOutlineCalendar,
-  AiOutlineMan,
-  AiOutlineWoman,
-  AiOutlineArrowLeft,
-} from "react-icons/ai";
-import useDatabase from "../Components/useDatabase"; // Import useDatabase hook
 
+import useDatabase from "../Components/useDatabase"; // Import useDatabase hook
+import "../CSS/AddProfile.css";
 const AddProfile = () => {
   const { db, saveDatabase } = useDatabase(); // Initialize database
   const navigate = useNavigate();
@@ -21,6 +15,7 @@ const AddProfile = () => {
   const [bloodGroup, setBloodGroup] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
+
   const [customRelation, setCustomRelation] = useState("");
   const [isCustom, setIsCustom] = useState(false);
 
@@ -54,6 +49,7 @@ const AddProfile = () => {
       // Insert the profile data into the database
       db.run(
         "INSERT INTO profiles (userEmail,name, relation, dob, gender, bloodGroup, height, weight) VALUES (?, ?, ?, ?, ?, ?, ?,?)",
+
         [
           currentUserEmail,
           Name,
@@ -88,36 +84,11 @@ const AddProfile = () => {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        backgroundColor: "#f4f4f4",
-      }}
-    >
-      <div style={{ textAlign: "center", marginBottom: "480px" }}>
-        <h2>Add Profile</h2>
-      </div>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px",
-          padding: "25px",
-          borderRadius: "10px",
-          boxShadow: "0px 4px 10px rgba(0,0,0,0.1)",
-          width: "320px",
-          backgroundColor: "#fff",
-          position: "absolute",
-          marginTop: "350px",
-        }}
-      >
+    <div className="addProfileContainer">
+      <h2 className="addProfileTitle">Add Profile</h2>
+      <form form onSubmit={handleSubmit} className="addProfileForm">
         {/* Name Field */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <AiOutlineUser size={20} />
+        <div className="formGroup">
           <label>Name:</label>
           <input
             type="text"
@@ -129,7 +100,7 @@ const AddProfile = () => {
         </div>
 
         {/* Relation Field */}
-        <div>
+        <div className="formGroup">
           <label>Relation:</label>
           <select value={Relation} onChange={handleRelationChange} required>
             <option value="">Select Relation</option>
@@ -152,8 +123,7 @@ const AddProfile = () => {
         </div>
 
         {/* DOB Field */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <AiOutlineCalendar size={20} />
+        <div className="formGroup">
           <label>DOB:</label>
           <input
             type="date"
@@ -164,7 +134,7 @@ const AddProfile = () => {
         </div>
 
         {/* Gender Field */}
-        <div>
+        <div className="formGroup">
           <label>Gender:</label>
           <label>
             <input
@@ -174,7 +144,7 @@ const AddProfile = () => {
               onChange={(e) => setGender(e.target.value)}
               required
             />
-            <AiOutlineMan /> Male
+            Male
           </label>
           <label>
             <input
@@ -183,33 +153,38 @@ const AddProfile = () => {
               value="Female"
               onChange={(e) => setGender(e.target.value)}
             />
-            <AiOutlineWoman /> Female
+            Female
           </label>
         </div>
 
         {/* Other Fields */}
-        <label>Blood Group</label>
-        <input
-          type="text"
-          placeholder="Enter Blood Group"
-          value={bloodGroup}
-          onChange={(e) => setBloodGroup(e.target.value)}
-        />
-        <label>Height</label>
-        <input
-          type="text"
-          placeholder="Enter Height (feet)"
-          value={height}
-          onChange={(e) => setHeight(e.target.value)}
-        />
-        <label>Weight</label>
-        <input
-          type="text"
-          placeholder="Enter Weight (kg)"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-        />
-
+        <div className="formGroup">
+          <label>Blood Group</label>
+          <input
+            type="text"
+            placeholder="Enter Blood Group"
+            value={bloodGroup}
+            onChange={(e) => setBloodGroup(e.target.value)}
+          />
+        </div>
+        <div className="formGroup">
+          <label>Height</label>
+          <input
+            type="text"
+            placeholder="Enter Height (feet)"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+          />
+        </div>
+        <div className="formGroup">
+          <label>Weight</label>
+          <input
+            type="text"
+            placeholder="Enter Weight (kg)"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
+        </div>
         <button type="submit">Add Profile</button>
       </form>
     </div>

@@ -1,72 +1,120 @@
 import React, { useState, useEffect } from "react";
 import "../CSS/Temperature.css";
-import { useNavigate, useLocation } from "react-router-dom";
-
+import { useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
 
 const Temperature = () => {
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [temperature, setTemperature] = useState("");
-  const [dataRecords, setDataRecords] = useState([]);
-  const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = location.state || {}; // Get selected profile
+  const { profile } = location.state || {};
   const { db, saveDatabase } = useDatabase();
 
-  // Load temperature records from the database for this profile
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getNowTime = () => new Date().toTimeString().slice(0, 5);
+
+  const [date, setDate] = useState(getToday());
+  const [time, setTime] = useState(getNowTime());
+  const [maxTime, setMaxTime] = useState(getNowTime());
+  const [temperature, setTemperature] = useState("");
+  const [unit, setUnit] = useState("°F"); // default unit
+  const [dataRecords, setDataRecords] = useState([]);
+
   const loadData = () => {
-    if (db && profile) {
-      try {
-        const stmt = db.prepare(
-          "SELECT date, time, value FROM Vitals WHERE profileName = ? AND vitalName = 'Temperature'"
-        );
-        stmt.bind([profile.name]);
-        const rows = [];
-        while (stmt.step()) {
-          rows.push(stmt.getAsObject());
-        }
-        stmt.free();
-        setDataRecords(rows);
-      } catch (error) {
-        console.error("Error loading temperature data:", error);
-      }
+    if (!db || !profile) return;
+    try {
+      const stmt = db.prepare(
+        "SELECT date, time, value, unit FROM Vitals WHERE profileName = ? AND vitalName = 'Temperature'"
+      );
+      stmt.bind([profile.name]);
+      const rows = [];
+      while (stmt.step()) rows.push(stmt.getAsObject());
+      stmt.free();
+      setDataRecords(rows);
+    } catch (err) {
+      console.error("Error loading temperature data:", err);
     }
   };
 
   useEffect(() => {
-    if (db && profile) {
-      loadData();
-    }
+    if (db && profile) loadData();
   }, [db, profile]);
+
+  useEffect(() => {
+    const today = getToday();
+    const nowTime = getNowTime();
+    if (date === today) {
+      setMaxTime(nowTime);
+      if (time > nowTime) setTime(nowTime);
+    } else {
+      setMaxTime("23:59");
+    }
+  }, [date, time]);
 
   const handleAdd = (e) => {
     e.preventDefault();
     if (!date || !time || !temperature || !db || !profile) return;
+
+    const selected = new Date(`${date}T${time}`);
+    const now = new Date();
+    if (selected > now) {
+      alert("Cannot record a future date/time");
+      return;
+    }
+
+    let minVal, maxVal;
+
+    if (unit === "°F") {
+      minVal = 98;
+      maxVal = 105;
+    } else {
+      minVal = 36;
+      maxVal = 40.5;
+    }
+
+    const tempVal = parseFloat(temperature);
+    if (isNaN(tempVal)) {
+      alert("Please enter a valid number for temperature.");
+      return;
+    }
+
+    if (tempVal < minVal || tempVal > maxVal) {
+      alert(`Temperature must be between ${minVal} and ${maxVal} ${unit}`);
+      return;
+    }
+
     try {
-      // Insert the new temperature record into the Vitals table
       const stmt = db.prepare(
-        "INSERT INTO Vitals (profileName, vitalName, value, unit, date, time) VALUES (?, ?, ?, ?, ?, ?)"
+        "INSERT INTO Vitals (profileName, vitalName, type, value, unit, date, time, minValue, maxValue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
       );
-      stmt.run([profile.name, "Temperature", temperature, "°F", date, time]);
+      stmt.run([
+        profile.name,
+        "Temperature",
+        "temperature",
+        tempVal,
+        unit,
+        date,
+        time,
+        minVal,
+        maxVal,
+      ]);
       stmt.free();
       saveDatabase();
-      // Reload records and clear form
+
       loadData();
-      setDate("");
-      setTime("");
       setTemperature("");
-    } catch (error) {
-      console.error("Error inserting temperature record:", error);
+      setDate(getToday());
+      setTime(getNowTime());
+    } catch (err) {
+      console.error("Error inserting temperature record:", err);
     }
   };
 
-  // Prepare chart data: include a combined label and convert value to a number.
-  const chartData = dataRecords.map((record) => ({
-    ...record,
-    dateTime: `${record.date} ${record.time}`,
-    temperature: parseFloat(record.value),
-  }));
+  // const chartData = dataRecords.map((rec) => ({
+  //   ...rec,
+  //   dateTime: `${rec.date} ${rec.time}`,
+  //   temperature: parseFloat(rec.value),
+  //   unit: rec.unit,
+  // })
+  // );
 
   return (
     <div className="temp-container">
@@ -79,6 +127,7 @@ const Temperature = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              max={getToday()}
               required
             />
           </div>
@@ -88,16 +137,25 @@ const Temperature = () => {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
+              max={maxTime}
               required
             />
           </div>
           <div className="input-group">
-            <label>Temperature:</label>
+            <label>Unit:</label>
+            <select value={unit} onChange={(e) => setUnit(e.target.value)}>
+              <option value="°F">°F</option>
+              <option value="°C">°C</option>
+            </select>
+          </div>
+          <div className="input-group">
+            <label>Temperature ({unit}):</label>
             <input
               type="number"
               value={temperature}
-              placeholder="Enter temperature in Fahrenheit"
+              placeholder={`Enter temperature in ${unit}`}
               onChange={(e) => setTemperature(e.target.value)}
+              step="0.1"
               required
             />
           </div>

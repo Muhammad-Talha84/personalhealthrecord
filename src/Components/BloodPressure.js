@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
 import "../CSS/BloodPressure.css";
-import { AiOutlineArrowLeft } from "react-icons/ai";
 
 const BloodPressure = () => {
   const navigate = useNavigate();
@@ -14,14 +13,16 @@ const BloodPressure = () => {
   const { profile, data: initialData } = location.state || {};
   // Alternatively, if you're using selectedProfile, then ensure you pass it correctly:
   // const selectedProfile = location.state?.selectedProfile || {};
-
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getNowTime = () => new Date().toTimeString().slice(0, 5);
   // Use the same profile object as Temperature code if possible
   // const initialData = location.state?.data || [];
   const [data, setData] = useState(initialData);
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [date, setDate] = useState(getToday());
+  const [time, setTime] = useState(getNowTime());
+  const [maxTime, setMaxTime] = useState(getNowTime());
 
   // Load blood pressure records from the database
   const loadData = () => {
@@ -48,13 +49,27 @@ const BloodPressure = () => {
       loadData();
     }
   }, [db, profile]);
-
+  useEffect(() => {
+    const today = getToday();
+    const nowTime = getNowTime();
+    if (date === today) {
+      setMaxTime(nowTime);
+      if (time > nowTime) setTime(nowTime);
+    } else {
+      setMaxTime("23:59");
+    }
+  }, [date, time]);
   const handleAdd = (e) => {
     e.preventDefault();
     // Validate all fields are provided; adjust property name if needed
     if (!date || !time || !systolic || !diastolic || !db || !profile?.name)
       return;
-
+    const selected = new Date(`${date}T${time}`);
+    const now = new Date();
+    if (selected > now) {
+      alert("Cannot record a future date/time");
+      return;
+    }
     try {
       const stmt = db.prepare(
         "INSERT INTO Vitals (profileName, vitalName, value, unit, date, time) VALUES (?, ?, ?, ?, ?, ?)"
@@ -72,8 +87,8 @@ const BloodPressure = () => {
       loadData();
       setSystolic("");
       setDiastolic("");
-      setDate("");
-      setTime("");
+      setDate(getToday());
+      setTime(getNowTime());
     } catch (error) {
       console.error("Error inserting blood pressure record:", error);
     }
@@ -83,8 +98,8 @@ const BloodPressure = () => {
     <div className="bloodpressurecontainer">
       <div className="card">
         <h2>Blood Pressure Tracker</h2>
-        <h3>Patient: {profile?.Name || profile?.name}</h3>
-        <p>Relation: {profile?.relation}</p>
+        {/* <h3>Patient: {profile?.Name || profile?.name}</h3> */}
+        {/* <p>Relation: {profile?.relation}</p> */}
         <form onSubmit={handleAdd}>
           <label>Systolic:</label>
           <input
@@ -116,7 +131,7 @@ const BloodPressure = () => {
           <input
             style={{ width: "150px" }}
             type="time"
-            value={time}
+            value={maxTime}
             onChange={(e) => setTime(e.target.value)}
             required
           />

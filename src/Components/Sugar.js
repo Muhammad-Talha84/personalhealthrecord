@@ -9,65 +9,43 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import "../CSS/Sugar.css";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
 
 const Sugar = () => {
-  const navigate = useNavigate();
   const { state } = useLocation();
-  const profile = state?.profile; // Expecting { name: string, ... }
+  const profile = state?.profile;
   const { db, saveDatabase } = useDatabase();
 
-  const [glucoseData, setGlucoseData] = useState([]);
+  // Prepare date defaults
+  const todayDefault = new Date().toISOString().split("T")[0];
+  const timeDefault = new Date().toTimeString().slice(0, 5);
+
+  // Form state
   const [formData, setFormData] = useState({
-    date: "",
-    time: "",
+    date: todayDefault,
+    time: timeDefault,
     glucoseRate: "",
     type: "Fasting",
   });
-  const [view, setView] = useState("Daily");
+
+  // View & filter state
+  const [view, setView] = useState("All");
   const [selectedType, setSelectedType] = useState("Fasting");
+  const [customStartDate, setCustomStartDate] = useState(todayDefault);
+  const [customEndDate, setCustomEndDate] = useState(todayDefault);
 
-  // 1) Load all Glucose readings for this profile
-  useEffect(() => {
-    if (!db || !profile) return;
+  // Data state (filtered)
+  const [filteredData, setFilteredData] = useState([]);
 
-    try {
-      const stmt = db.prepare(
-        `SELECT date, time, value AS glucoseRate, type
-         FROM Vitals
-         WHERE profileName = ? AND vitalName = 'Glucose'
-         ORDER BY date, time`
-      );
-      stmt.bind([profile.name]);
-
-      const rows = [];
-      while (stmt.step()) {
-        rows.push(stmt.getAsObject());
-      }
-      stmt.free();
-
-      // Convert strings to numbers
-      setGlucoseData(
-        rows.map((r) => ({
-          ...r,
-          glucoseRate: parseFloat(r.glucoseRate),
-        }))
-      );
-    } catch (err) {
-      console.error("Failed to load glucose data:", err);
-    }
-  }, [db, profile]);
-
-  // 2) Handle form field changes
+  // Handle form inputs
   const handleChange = (e) =>
     setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  // 3) Insert a new reading
+  // Insert new reading
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!db || !profile) return;
-
     const { date, time, glucoseRate, type } = formData;
     if (!date || !time || !glucoseRate) return;
 
@@ -79,31 +57,76 @@ const Sugar = () => {
       );
       stmt.run([profile.name, type, glucoseRate.toString(), date, time]);
       stmt.free();
-
       saveDatabase();
 
-      // Reload from DB (simplest) or append locally:
-      setGlucoseData((d) => [
-        ...d,
-        { date, time, type, glucoseRate: Number(glucoseRate) },
-      ]);
-
-      setFormData({ date: "", time: "", glucoseRate: "", type: "Fasting" });
+      // Reset form
+      setFormData({
+        date: todayDefault,
+        time: timeDefault,
+        glucoseRate: "",
+        type: "Fasting",
+      });
     } catch (err) {
       console.error("Failed to insert glucose reading:", err);
     }
   };
 
-  // 4) Render
+  // Fetch & filter data by view, type, and date range via SQL.js
+  useEffect(() => {
+    if (!db || !profile) return;
+
+    // Compute date range
+    const today = new Date();
+    const endStr = today.toISOString().split("T")[0];
+    let startStr;
+
+    switch (view) {
+      case "Daily":
+        startStr = endStr;
+        break;
+      case "Weekly":
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 6);
+        startStr = weekAgo.toISOString().split("T")[0];
+        break;
+      case "Monthly":
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        startStr = monthAgo.toISOString().split("T")[0];
+        break;
+      case "Custom":
+        startStr = customStartDate;
+        break;
+      case "All":
+      default:
+        startStr = "0000-01-01"; // earliest possible
+        break;
+    }
+
+    const query = `
+      SELECT date, time, value AS glucoseRate, type
+      FROM Vitals
+      WHERE profileName = ?
+        AND vitalName = 'Glucose'
+        AND type = ?
+        AND date BETWEEN ? AND ?
+      ORDER BY date, time
+    `;
+
+    const stmt = db.prepare(query);
+    stmt.bind([profile.name, selectedType, startStr, endStr]);
+
+    const rows = [];
+    while (stmt.step()) rows.push(stmt.getAsObject());
+    stmt.free();
+
+    setFilteredData(
+      rows.map((r) => ({ ...r, glucoseRate: parseFloat(r.glucoseRate) }))
+    );
+  }, [db, profile, view, selectedType, customStartDate, customEndDate]);
+
   return (
     <div className="container">
-      <button
-        className="back-button"
-        onClick={() => navigate("/addvital", { state: { profile } })}
-      >
-        🔙 Back
-      </button>
-
       <h2 className="title">Add Blood Glucose</h2>
       <form onSubmit={handleSubmit} className="form">
         <label>Date</label>
@@ -112,6 +135,7 @@ const Sugar = () => {
           name="date"
           value={formData.date}
           onChange={handleChange}
+          max={todayDefault}
           required
         />
 
@@ -135,7 +159,7 @@ const Sugar = () => {
 
         <label>Type</label>
         <div className="radio-group">
-          {["Fasting", "Non-Fasting"].map((t) => (
+          {["Fasting", "Regular"].map((t) => (
             <label key={t}>
               <input
                 type="radio"
@@ -144,7 +168,7 @@ const Sugar = () => {
                 checked={formData.type === t}
                 onChange={handleChange}
               />
-              {t === "Non-Fasting" ? "After Eating" : t}
+              {t}
             </label>
           ))}
         </div>
@@ -157,7 +181,7 @@ const Sugar = () => {
       <h2 className="title">Blood Glucose</h2>
 
       <div className="tab-group">
-        {["Daily", "Weekly", "Monthly"].map((v) => (
+        {["All", "Daily", "Weekly", "Monthly", "Custom"].map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -168,8 +192,28 @@ const Sugar = () => {
         ))}
       </div>
 
+      {/* Custom range inputs */}
+      {view === "Custom" && (
+        <div className="custom-range">
+          <label>Start Date</label>
+          <input
+            type="date"
+            value={customStartDate}
+            max={todayDefault}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+          />
+          <label>End Date</label>
+          <input
+            type="date"
+            value={customEndDate}
+            max={todayDefault}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+          />
+        </div>
+      )}
+
       <div className="radio-group">
-        {["Fasting", "Non-Fasting"].map((t) => (
+        {["Fasting", "Regular"].map((t) => (
           <label key={t}>
             <input
               type="radio"
@@ -178,18 +222,17 @@ const Sugar = () => {
               checked={selectedType === t}
               onChange={(e) => setSelectedType(e.target.value)}
             />
-            {t === "Non-Fasting" ? "After Eating" : t}
+            {t}
           </label>
         ))}
       </div>
 
       <div className="chart-container">
         <h3>
-          Selected:{" "}
-          {selectedType === "Non-Fasting" ? "After Eating" : selectedType}
+          {view} ({selectedType})
         </h3>
         <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={glucoseData.filter((d) => d.type === selectedType)}>
+          <LineChart data={filteredData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
@@ -197,7 +240,7 @@ const Sugar = () => {
             <Line
               type="monotone"
               dataKey="glucoseRate"
-              stroke="red"
+              stroke="#8884d8"
               strokeWidth={2}
             />
           </LineChart>

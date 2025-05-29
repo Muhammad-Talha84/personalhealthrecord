@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import useDatabase from "../Components/useDatabase"; // ← your hook
 import {
   LineChart,
   Line,
@@ -12,65 +13,202 @@ import {
 
 export default function VitalDetail() {
   const { state } = useLocation();
-  const navigate = useNavigate();
+  const { db } = useDatabase();
 
+  // profile.name must match Vitals.profileName
   const [profile, setProfile] = useState(null);
-  const [type, setType] = useState("");
-  const [rawReadings, setRawReadings] = useState([]);
-  const [readings, setReadings] = useState([]);
-  // Default view mode for displaying chart or table.
+  const [type, setType] = useState(""); // vitalName
+  // viewMode: graph vs table
   const [viewMode, setViewMode] = useState("graph");
 
-  // Initialize from location.state
+  // period & custom-range
+  const [period, setPeriod] = useState("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  // final data we’ll feed recharts / table
+  const [readings, setReadings] = useState([]);
+
+  // pull profile/type out of location.state:
   useEffect(() => {
-    if (state?.profile && state?.type && Array.isArray(state?.readings)) {
+    if (state?.profile && state?.type) {
       setProfile(state.profile);
       setType(state.type);
-      setRawReadings(state.readings);
     }
   }, [state]);
 
-  // Transform rawReadings → readings
+  // whenever db ⏤or⏤ filtering options change, re-query:
   useEffect(() => {
-    if (!rawReadings.length) return;
-    const transformed = rawReadings
-      .map((r) => {
-        const dt = new Date(`${r.date} ${r.time}`);
+    if (!db || !profile || !type) return;
+
+    let sql = "";
+    let params = [profile.name, type];
+
+    switch (period) {
+      case "daily":
+        sql = `
+        SELECT
+        date || ' ' || replace(time, '.', ':')  AS dateTime,
+        value
+      FROM Vitals
+      WHERE profileName = ?
+        AND vitalName   = ?
+        AND date = date('now','localtime')
+      ORDER BY dateTime;
+        `;
+        break;
+
+      case "weekly":
+        sql = `
+        SELECT
+      -- rename "day" → "dateTime"
+      strftime('%Y-%m-%d', date)   AS dateTime,
+      -- rename "avgValue" → "value"
+      AVG(value)                   AS value
+    FROM Vitals
+    WHERE profileName = ?
+      AND vitalName   = ?
+      AND date >= date('now','-6 days','localtime')
+    GROUP BY dateTime
+    ORDER BY dateTime;
+        `;
+        break;
+
+      case "monthly":
+        sql = `
+        SELECT
+      month,
+      dateTime,
+      value
+    FROM (
+      SELECT
+        strftime('%Y-%m', date)                                       AS month,
+        -- normalize dots to colons so SQLite can parse AM/PM
+        strftime(
+          '%Y-%m-%d %H:%M',
+          datetime(
+            date || ' ' ||
+            replace(time, '.', ':')
+          )
+        )                                                              AS dateTime,
+        value,
+        ROW_NUMBER() OVER (
+          PARTITION BY strftime('%Y-%m', date)
+          ORDER BY datetime(
+            date || ' ' ||
+            replace(time, '.', ':')
+          ) DESC
+        )                                                              AS rn
+      FROM Vitals
+      WHERE profileName = ?
+        AND vitalName   = ?
+    )
+    WHERE rn = 1
+    ORDER BY month;
+        `;
+        break;
+
+      case "custom":
+        if (!fromDate || !toDate) {
+          setReadings([]);
+          return;
+        }
+        sql = `
+          SELECT date || ' ' || time AS dateTime, value
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName   = ?
+            AND date BETWEEN ? AND ?
+          ORDER BY dateTime;
+        `;
+        params.push(fromDate, toDate);
+        break;
+    }
+    if (period == "all") {
+      if (!state?.readings?.length) return;
+      const transformed = state?.readings
+        .map((r) => {
+          const dt = new Date(`${r.date} ${r.time}`);
+          return {
+            ...r,
+            dateTime: dt.getTime(),
+            dateLabel: dt.toLocaleString(),
+            value: Number(r.value),
+          };
+        })
+        .sort((a, b) => a.dateTime - b.dateTime);
+      setReadings(transformed);
+    } else {
+      // run & map the result:
+      const result = db.exec(sql, params);
+      if (!result.length) {
+        setReadings([]);
+        return;
+      }
+
+      const { columns, values } = result[0];
+      const mapped = values.map((row) => {
+        const obj = columns.reduce((o, col, i) => {
+          o[col] = row[i];
+          return o;
+        }, {});
+        const dt = new Date(obj.dateTime);
         return {
-          ...r,
           dateTime: dt.getTime(),
-          dateLabel: dt.toLocaleString(),
-          value: Number(r.value),
+          dateLabel: obj.dateTime,
+          value: Number(obj.value),
         };
-      })
-      .sort((a, b) => a.dateTime - b.dateTime);
+      });
 
-    setReadings(transformed);
-  }, [rawReadings]);
+      setReadings(mapped);
+    }
+  }, [db, profile, type, period, fromDate, toDate]);
 
-  // Guard: if data is missing, show a friendly error message.
-  if (!profile || !type || readings.length === 0) {
-    return (
-      <div style={{ padding: 20 }}>
-        <button onClick={() => navigate(-1)}>← Back</button>
-        <h2>Oops, data not found</h2>
-        <p>
-          It looks like we don’t have the readings to show your{" "}
-          <strong>{type || "vital"}</strong> details. Make sure you clicked the
-          item from the Profile screen (don’t reload this page directly).
-        </p>
-      </div>
-    );
+  if (!profile || !type) {
+    return <p>Loading…</p>;
   }
 
   return (
     <div className="vitalDetailContainer">
-      <button onClick={() => navigate(-1)}>← Back</button>
       <h2>
         {type} Details for {profile.name}
       </h2>
 
-      <div className="viewToggle">
+      <div className="controls">
+        {/* Period buttons */}
+        {["all", "daily", "weekly", "monthly", "custom"].map((p) => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={period === p ? "active" : ""}
+          >
+            {p.charAt(0).toUpperCase() + p.slice(1)}
+          </button>
+        ))}
+
+        {/* Custom range inputs */}
+        {period === "custom" && (
+          <span className="date-range">
+            <label>
+              From{" "}
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+            </label>
+            <label>
+              To{" "}
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </label>
+          </span>
+        )}
+
+        {/* Graph vs Table */}
         <button
           onClick={() => setViewMode("graph")}
           className={viewMode === "graph" ? "active" : ""}
@@ -95,7 +233,6 @@ export default function VitalDetail() {
               <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
               <XAxis
                 dataKey="dateTime"
-                // Format the timestamp to show date and time like "Oct 05, 3:07 PM"
                 tickFormatter={(ts) =>
                   new Date(ts).toLocaleString("en-US", {
                     month: "short",
@@ -104,26 +241,23 @@ export default function VitalDetail() {
                     minute: "numeric",
                   })
                 }
-                tick={{ fontSize: 12 }}
                 angle={-45}
                 textAnchor="end"
-                interval={0}
                 height={60}
               />
               <YAxis
-                // Fixed Y-axis range to match the desired appearance (e.g., from 95°F to 104°F)
                 domain={["auto", "auto"]}
-                tick={{ fontSize: 12 }}
                 label={{
-                  value: `${type} (°F)`,
+                  value: `${type}${
+                    readings[0]?.unit ? ` (${readings[0].unit})` : ""
+                  }`,
                   angle: -90,
                   position: "insideLeft",
-                  style: { fontSize: 12 },
                 }}
               />
               <Tooltip
                 labelFormatter={(ts) => new Date(ts).toLocaleString()}
-                formatter={(val) => [`${val} °F`, type]}
+                formatter={(v) => [v, type]}
               />
               <Line
                 dataKey="value"
@@ -139,10 +273,8 @@ export default function VitalDetail() {
         <table className="vitalTable">
           <thead>
             <tr>
-              <th>Date &amp; Time</th>
-              <th>
-                Value {readings[0].unit ? `(${readings[0].unit})` : "(°F)"}
-              </th>
+              <th>Date & Time</th>
+              <th>Value{readings[0]?.unit ? ` (${readings[0].unit})` : ""}</th>
             </tr>
           </thead>
           <tbody>

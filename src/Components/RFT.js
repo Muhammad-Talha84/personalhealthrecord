@@ -3,17 +3,21 @@ import { useLocation } from "react-router-dom";
 import "../CSS/Rft.css";
 import useDatabase from "../Components/useDatabase";
 const RFT = () => {
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getNowTime = () => new Date().toTimeString().slice(0, 5);
   const [bloodUrea, setBloodUrea] = useState("");
   const [serum, setSerum] = useState("");
   const [uricAcid, setUricAcid] = useState("");
   const [bun, setBun] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+
+  const [date, setDate] = useState(getToday());
+  const [time, setTime] = useState(getNowTime());
+  const [maxTime, setMaxTime] = useState(getNowTime());
   const [data, setData] = useState("");
   const location = useLocation();
   const { profile } = location.state || {}; // selected profile from state
   const { db, saveDatabase } = useDatabase();
-  const testName = "RenalFunctionTest";
+  const testName = "RFT";
   const loadData = () => {
     if (db && profile) {
       try {
@@ -41,7 +45,16 @@ const RFT = () => {
       loadData();
     }
   }, [db, profile]);
-
+  useEffect(() => {
+    const today = getToday();
+    const nowTime = getNowTime();
+    if (date === today) {
+      setMaxTime(nowTime);
+      if (time > nowTime) setTime(nowTime);
+    } else {
+      setMaxTime("23:59");
+    }
+  }, [date, time]);
   const handleAdd = (e) => {
     e.preventDefault();
     if (
@@ -55,6 +68,12 @@ const RFT = () => {
       !profile
     )
       return;
+    const selected = new Date(`${date}T${time}`);
+    const now = new Date();
+    if (selected > now) {
+      alert("Cannot record a future date/time");
+      return;
+    }
 
     const parameters = [
       {
@@ -117,8 +136,8 @@ const RFT = () => {
       loadData();
 
       // Clear form
-      setDate("");
-      setTime("");
+      setDate(getToday());
+      setTime(getNowTime());
       setBun("");
       setBloodUrea("");
 
@@ -142,6 +161,7 @@ const RFT = () => {
             placeholder="Date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            max={getToday()}
           />
         </label>
         <label>
@@ -151,6 +171,7 @@ const RFT = () => {
             placeholder="Time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
+            max={maxTime}
           />
         </label>
         <label>

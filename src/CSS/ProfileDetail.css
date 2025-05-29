@@ -7,7 +7,6 @@
   background: #f4f4f4;
   min-height: 100vh;
 }
-
 .details {
   background: white;
   padding: 20px;
@@ -16,6 +15,39 @@
   width: 90%;
   max-width: 500px;
   margin-bottom: 20px;
+}
+
+/* new: grid container for the profile fields */
+.profile-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; /* space between items */
+  margin-bottom: 16px;
+}
+
+/* each field */
+.profile-item {
+  flex: 1 1 140px; /* grow/shrink, basis */
+  background: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-width: 120px; /* prevent too-narrow columns */
+}
+/* ya comments sa hatani ha  */
+.dataSections {
+  display: flex;
+  gap: 24px; /* space between vitals & labs */
+  flex-wrap: wrap; /* stack on very small screens */
+  margin-bottom: 20px;
+}
+.vitalsSection,
+.labReportsSection {
+  flex: 1 1 300px; /* grow/shrink, basis of ~300px */
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .dataSections {
