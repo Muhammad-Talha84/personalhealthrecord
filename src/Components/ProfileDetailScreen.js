@@ -232,6 +232,13 @@ const ProfileDetailScreen = () => {
           <button onClick={() => navigate("/addvital", { state: { profile } })}>
             Add Vital
           </button>
+          <button
+            onClick={() =>
+              navigate("/compvital", { state: { baseProfile: profile } })
+            }
+          >
+            Compare Vitals with Family
+          </button>
         </div>
 
         {/* Lab Reports Section */}

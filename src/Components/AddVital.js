@@ -12,8 +12,8 @@ const AddVital = () => {
       icon: <ThermostatIcon style={{ fontSize: "24px", color: "red" }} />,
       route: "/temp",
     },
-    { name: "Blood Glucose", icon: null, route: "/sugar" },
-
+    // { name: "Blood Glucose", icon: null, route: "/sugar" },
+    { name: "Pulse Rate", route: "/pulse" },
     { name: "Heart Rate", route: "/heart" },
     {
       name: "Blood Pressure",

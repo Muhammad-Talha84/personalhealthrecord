@@ -131,7 +131,8 @@ const BloodPressure = () => {
           <input
             style={{ width: "150px" }}
             type="time"
-            value={maxTime}
+            value={time}
+            max={maxTime}
             onChange={(e) => setTime(e.target.value)}
             required
           />

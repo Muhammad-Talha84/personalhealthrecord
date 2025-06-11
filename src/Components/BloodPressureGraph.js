@@ -16,15 +16,11 @@ const BloodPressureGraph = () => {
   const profile = state?.profile;
   const { db } = useDatabase();
 
-  // View state
   const [view, setView] = useState("All");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
-
-  // Filtered SQL data
   const [chartData, setChartData] = useState([]);
 
-  // helper for formatting
   const formatDateTime = (ms) => {
     const d = new Date(ms);
     return d.toLocaleString("en-US", {
@@ -36,68 +32,109 @@ const BloodPressureGraph = () => {
     });
   };
 
-  // Reload data whenever filters or DB change
   useEffect(() => {
     if (!db || !profile) return;
 
-    // Compute date range strings
-    const today = new Date();
-    const endStr = today.toISOString().split("T")[0];
-    let startStr;
+    let sql = "";
+    let params = [profile.name];
 
     switch (view) {
       case "Daily":
-        startStr = endStr;
+        sql = `
+          SELECT
+            date || ' ' || replace(time, '.', ':') AS dateTime,
+            CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER) AS systolic,
+            CAST(substr(value, instr(value, '/')+1) AS INTEGER) AS diastolic
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName = 'BloodPressure'
+            AND date = date('now','localtime')
+          ORDER BY dateTime
+        `;
         break;
+
       case "Weekly":
-        const wk = new Date(today);
-        wk.setDate(wk.getDate() - 6);
-        startStr = wk.toISOString().split("T")[0];
+        sql = `
+          SELECT
+            strftime('%Y-%m-%d', date) AS dateTime,
+            AVG(CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER)) AS systolic,
+            AVG(CAST(substr(value, instr(value, '/')+1) AS INTEGER)) AS diastolic
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName = 'BloodPressure'
+            AND date >= date('now','-6 days','localtime')
+          GROUP BY dateTime
+          ORDER BY dateTime
+        `;
         break;
+
       case "Monthly":
-        const mo = new Date(today);
-        mo.setMonth(mo.getMonth() - 1);
-        startStr = mo.toISOString().split("T")[0];
+        sql = `
+          SELECT
+            strftime('%Y-%m', date) AS dateTime,
+            AVG(CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER)) AS systolic,
+            AVG(CAST(substr(value, instr(value, '/')+1) AS INTEGER)) AS diastolic
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName = 'BloodPressure'
+            AND date >= date('now', '-11 months', 'start of month')
+          GROUP BY dateTime
+          ORDER BY dateTime
+        `;
         break;
+
       case "Custom":
-        startStr = customStartDate;
+        if (!customStartDate || !customEndDate) {
+          setChartData([]);
+          return;
+        }
+        sql = `
+          SELECT
+            date || ' ' || replace(time, '.', ':') AS dateTime,
+            CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER) AS systolic,
+            CAST(substr(value, instr(value, '/')+1) AS INTEGER) AS diastolic
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName = 'BloodPressure'
+            AND date BETWEEN ? AND ?
+          ORDER BY dateTime
+        `;
+        params.push(customStartDate, customEndDate);
         break;
+
       case "All":
       default:
-        startStr = "0000-01-01";
-        break;
+        sql = `
+          SELECT
+            date || ' ' || replace(time, '.', ':') AS dateTime,
+            CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER) AS systolic,
+            CAST(substr(value, instr(value, '/')+1) AS INTEGER) AS diastolic
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName = 'BloodPressure'
+          ORDER BY dateTime
+        `;
     }
 
-    const query = `
-      SELECT date, time, value AS bp, unit
-      FROM Vitals
-      WHERE profileName = ?
-        AND vitalName = 'BloodPressure'
-        AND date BETWEEN ? AND ?
-      ORDER BY date, time`;
-
-    const stmt = db.prepare(query);
-    stmt.bind([profile.name, startStr, endStr]);
-
-    const rows = [];
-    while (stmt.step()) {
-      const { date, time, bp } = stmt.getAsObject();
-      const [systolic, diastolic] = bp.split("/").map(Number);
-      // parse as local Date
-      const [y, m, d] = date.split("-").map(Number);
-      let [t, mod] = time.split(" ");
-      let [h, min] = t.split(":").map(Number);
-      if (mod === "PM" && h < 12) h += 12;
-      if (mod === "AM" && h === 12) h = 0;
-      const dt = new Date(y, m - 1, d, h, min).getTime();
-      rows.push({ systolic, diastolic, dateTime: dt });
+    const result = db.exec(sql, params);
+    if (!result.length) {
+      setChartData([]);
+      return;
     }
-    stmt.free();
+
+    const { values } = result[0];
+    const rows = values.map(([dateTime, systolic, diastolic]) => ({
+      dateTime:
+        view === "Weekly" || view === "Monthly"
+          ? dateTime
+          : new Date(dateTime).getTime(),
+      systolic,
+      diastolic,
+    }));
 
     setChartData(rows);
   }, [db, profile, view, customStartDate, customEndDate]);
 
-  // ticks at data points
   const ticks = chartData.map((d) => d.dateTime);
 
   return (
@@ -121,6 +158,7 @@ const BloodPressureGraph = () => {
           </button>
         ))}
       </div>
+
       {view === "Custom" && (
         <div style={{ marginBottom: 16 }}>
           <label style={{ marginRight: 8 }}>
@@ -143,19 +181,34 @@ const BloodPressureGraph = () => {
           </label>
         </div>
       )}
+
       <ResponsiveContainer>
         <LineChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
         >
-          <CartesianGrid horizontal vertical={false} strokeDasharray="3 3" />
+          <CartesianGrid
+            horizontal={false}
+            vertical={false}
+            strokeDasharray="3 3"
+          />
           <XAxis
             dataKey="dateTime"
-            type="number"
-            scale="time"
-            domain={["dataMin", "dataMax"]}
+            type={
+              view === "Weekly" || view === "Monthly" ? "category" : "number"
+            }
+            scale={view === "Weekly" || view === "Monthly" ? undefined : "time"}
+            domain={
+              view === "Weekly" || view === "Monthly"
+                ? undefined
+                : ["dataMin", "dataMax"]
+            }
             ticks={ticks}
-            tickFormatter={formatDateTime}
+            tickFormatter={(val) =>
+              view === "Weekly" || view === "Monthly"
+                ? val
+                : formatDateTime(val)
+            }
             interval={0}
             angle={-45}
             textAnchor="end"
@@ -168,7 +221,11 @@ const BloodPressureGraph = () => {
             ]}
           />
           <Tooltip
-            labelFormatter={formatDateTime}
+            labelFormatter={(val) =>
+              view === "Weekly" || view === "Monthly"
+                ? val
+                : formatDateTime(val)
+            }
             formatter={(val, name) => [
               val,
               name.charAt(0).toUpperCase() + name.slice(1),

@@ -24,6 +24,8 @@ import AbnormalReports from "./Components/AbnormalReports";
 import Electrolytes from "./Components/Electrolytes";
 import CompareScreen from "./Components/CompareScreen";
 import LabParameterGraph from "./Components/LabParameterGraph";
+import PulseRate from "./Components/PulseRate";
+import CompareVitals from "./Components/CompareVitals";
 function App() {
   return (
     <Router>
@@ -37,7 +39,10 @@ function App() {
         {/* BloodPressure.js */}
         <Route path="/bp" element={<BloodPressure />} />
         {/* Sugar */}
-        <Route path="/sugar" element={<Sugar />} />
+        {/* <Route path="/sugar" element={<Sugar />} /> */}
+
+        {/* PULSE RATE */}
+        <Route path="/pulse" element={<PulseRate />} />
         {/* Temperature */}
         <Route path="/temp" element={<Temperature />} />
         {/* Add Profile */}
@@ -76,6 +81,8 @@ function App() {
         <Route path="/compare" element={<CompareScreen />} />
         {/* lab parameter graph */}
         <Route path="/graph" element={<LabParameterGraph />} />
+        {/* Compare vitals */}
+        <Route path="/compvital" element={<CompareVitals />} />
       </Routes>
     </Router>
   );
