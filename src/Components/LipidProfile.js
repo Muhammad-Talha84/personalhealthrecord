@@ -1,3 +1,4 @@
+// LipidProfile.js
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "../CSS/LipidProfile.css";
@@ -5,6 +6,15 @@ import useDatabase from "../Components/useDatabase";
 
 const getToday = () => new Date().toISOString().split("T")[0];
 const getNowTime = () => new Date().toTimeString().slice(0, 5);
+
+// 1) Define your normal ranges here
+const NORMAL_RANGES = {
+  Cholesterol: { min: 0, max: 200 }, // <200 preferred
+  HDL: { min: 40, max: Infinity }, // >40 (males) / >50 (females) – simplified to >40
+  LDL: { min: 0, max: 130 }, // <130 preferred
+  Triglycerides: { min: 0, max: 150 }, // <150 preferred
+  VLDL: { min: 5, max: 40 }, // 5–40
+};
 
 const LipidProfile = () => {
   const [cholesterol, setCholesterol] = useState("");
@@ -18,40 +28,33 @@ const LipidProfile = () => {
   const [maxTime, setMaxTime] = useState(getNowTime());
   const [records, setRecords] = useState([]);
 
-  const location = useLocation();
-  const { profile } = location.state || {};
+  const { profile } = useLocation().state || {};
   const { db, saveDatabase } = useDatabase();
   const testName = "LipidProfile";
 
-  const loadData = () => {
-    if (!db || !profile) return;
-    try {
-      const stmt = db.prepare(
-        `SELECT parameter, result, unit, referenceValue, date, time
-         FROM LabReports
-         WHERE profileName = ? AND testName = ?
-         ORDER BY date DESC, time DESC`
-      );
-      stmt.bind([profile.name, testName]);
-      const rows = [];
-      while (stmt.step()) rows.push(stmt.getAsObject());
-      stmt.free();
-      setRecords(rows);
-    } catch (error) {
-      console.error("Error loading Lipid Profile data:", error);
-    }
-  };
-
+  // load existing records (unchanged)
   useEffect(() => {
-    loadData();
+    if (!db || !profile) return;
+    const stmt = db.prepare(
+      `SELECT parameter, result, unit, referenceValue, date, time, minValue, maxValue
+       FROM LabReports
+       WHERE profileName = ? AND testName = ?
+       ORDER BY date DESC, time DESC`
+    );
+    stmt.bind([profile.name, testName]);
+    const rows = [];
+    while (stmt.step()) rows.push(stmt.getAsObject());
+    stmt.free();
+    setRecords(rows);
   }, [db, profile]);
 
+  // keep time ≤ now when date is today
   useEffect(() => {
     const today = getToday();
-    const nowTime = getNowTime();
+    const now = getNowTime();
     if (date === today) {
-      setMaxTime(nowTime);
-      if (time > nowTime) setTime(nowTime);
+      setMaxTime(now);
+      if (time > now) setTime(now);
     } else {
       setMaxTime("23:59");
     }
@@ -59,97 +62,61 @@ const LipidProfile = () => {
 
   const handleAdd = (e) => {
     e.preventDefault();
-    if (
-      !cholesterol ||
-      !hdl ||
-      !ldl ||
-      !triglycerides ||
-      !date ||
-      !time ||
-      !db ||
-      !profile
-    ) {
-      alert("Please fill in all fields");
-      return;
+    // 2) basic field check
+    if (!cholesterol || !hdl || !ldl || !triglycerides || !date || !time) {
+      return alert("Please fill in all fields");
     }
-
     const selected = new Date(`${date}T${time}`);
     if (selected > new Date()) {
-      alert("Cannot record a future date/time");
-      return;
+      return alert("Cannot record a future date/time");
     }
 
-    const cholVal = parseFloat(cholesterol);
-    const hdlVal = parseFloat(hdl);
-    const ldlVal = parseFloat(ldl);
-    const triVal = parseFloat(triglycerides);
-    const vldlCalc = parseFloat((triVal / 5).toFixed(2));
-    const vldlVal = vldl ? parseFloat(vldl) : vldlCalc;
+    // parse values
+    const cholVal = +cholesterol;
+    const hdlVal = +hdl;
+    const ldlVal = +ldl;
+    const triVal = +triglycerides;
+    // auto‐calc VLDL if not provided
+    const vldlVal = vldl ? +vldl : +(triVal / 5).toFixed(2);
 
-    const parameters = [
-      {
-        parameter: "Cholesterol",
-        value: cholVal,
-        unit: "mg/dL",
-        ref: "100-240",
-        min: 100,
-        max: 240,
-      },
-      {
-        parameter: "HDL",
-        value: hdlVal,
-        unit: "mg/dL",
-        ref: "20-100",
-        min: 20,
-        max: 100,
-      },
-      {
-        parameter: "LDL",
-        value: ldlVal,
-        unit: "mg/dL",
-        ref: "0-300",
-        min: 0,
-        max: 300,
-      },
-      {
-        parameter: "Triglycerides",
-        value: triVal,
-        unit: "mg/dL",
-        ref: "0-1000",
-        min: 0,
-        max: 1000,
-      },
-      {
-        parameter: "VLDL",
-        value: vldlVal,
-        unit: "mg/dL",
-        ref: "5-40",
-        min: 5,
-        max: 40,
-      },
-    ];
+    // 3) pack everything into an array by looping over your ranges
+    const allValues = {
+      Cholesterol: cholVal,
+      HDL: hdlVal,
+      LDL: ldlVal,
+      Triglycerides: triVal,
+      VLDL: vldlVal,
+    };
 
     try {
-      parameters.forEach((p) => {
+      Object.entries(allValues).forEach(([parameter, value]) => {
+        const range = NORMAL_RANGES[parameter];
+        const isAbnormal = value < range.min || value > range.max;
+        const refText = `${range.min}–${range.max}`;
         db.run(
-          `INSERT INTO LabReports (profileName, testName, parameter, result, unit, referenceValue, date, time, minValue, maxValue)
+          `INSERT INTO LabReports
+            (profileName, testName, parameter, result, unit, referenceValue, date, time, minValue, maxValue)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
           [
             profile.name,
             testName,
-            p.parameter,
-            p.value,
-            p.unit,
-            p.ref,
+            parameter,
+            value,
+            "mg/dL",
+            refText,
             date,
             time,
-            p.min,
-            p.max,
+            range.min,
+            range.max,
           ]
         );
+        // optionally, you could do:
+        // if (isAbnormal) console.warn(`${parameter} is abnormal!`);
       });
       saveDatabase();
-      loadData();
+      // refresh & clear
+      setRecords((r) => []); // trigger reload
+      // (reuse your loadData logic or just reload the page)
       setCholesterol("");
       setHdl("");
       setLdl("");
@@ -157,16 +124,18 @@ const LipidProfile = () => {
       setVldl("");
       setDate(getToday());
       setTime(getNowTime());
-      alert("Lipid Profile saved successfully.");
-    } catch (error) {
-      console.error("Error saving Lipid Profile:", error);
+      alert("Saved!");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving.");
     }
   };
 
   return (
     <div className="lipidContainer">
-      <h1>Lipid Profile Tests for {profile?.name}</h1>
+      <h1>Lipid Profile for {profile?.name}</h1>
       <form onSubmit={handleAdd} className="lipid-form">
+        {/* date/time inputs (unchanged) */}
         <div className="form-row">
           <label>
             Date
@@ -189,14 +158,16 @@ const LipidProfile = () => {
             />
           </label>
         </div>
+
+        {/* value inputs */}
         <div className="form-row">
           <label>
             Cholesterol
             <input
               type="number"
-              placeholder="mg/dL"
               value={cholesterol}
               onChange={(e) => setCholesterol(e.target.value)}
+              placeholder="<200"
               required
             />
           </label>
@@ -204,9 +175,9 @@ const LipidProfile = () => {
             HDL
             <input
               type="number"
-              placeholder="mg/dL"
               value={hdl}
               onChange={(e) => setHdl(e.target.value)}
+              placeholder=">40"
               required
             />
           </label>
@@ -214,38 +185,40 @@ const LipidProfile = () => {
             LDL
             <input
               type="number"
-              placeholder="mg/dL"
               value={ldl}
               onChange={(e) => setLdl(e.target.value)}
+              placeholder="<130"
               required
             />
           </label>
         </div>
+
         <div className="form-row">
           <label>
             Triglycerides
             <input
               type="number"
-              placeholder="mg/dL"
               value={triglycerides}
               onChange={(e) => setTriglycerides(e.target.value)}
+              placeholder="<150"
               required
             />
           </label>
           <label>
-            VLDL (optional)
+            VLDL (opt)
             <input
               type="number"
-              placeholder="mg/dL"
               value={vldl}
               onChange={(e) => setVldl(e.target.value)}
+              placeholder="5–40"
             />
           </label>
         </div>
-        <button type="submit" className="submit-button">
-          Add
-        </button>
+
+        <button type="submit">Add</button>
       </form>
+
+      {/* You can render your records table below, using the minValue/maxValue from each row */}
     </div>
   );
 };

@@ -55,31 +55,31 @@ const BloodPressureGraph = () => {
 
       case "Weekly":
         sql = `
-          SELECT
-            strftime('%Y-%m-%d', date) AS dateTime,
-            AVG(CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER)) AS systolic,
-            AVG(CAST(substr(value, instr(value, '/')+1) AS INTEGER)) AS diastolic
-          FROM Vitals
-          WHERE profileName = ?
-            AND vitalName = 'BloodPressure'
-            AND date >= date('now','-6 days','localtime')
-          GROUP BY dateTime
-          ORDER BY dateTime
-        `;
+        SELECT
+        MAX(date || ' ' || replace(time, '.', ':')) AS dateTime,
+        AVG(CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER)) AS systolic,
+        AVG(CAST(substr(value, instr(value, '/')+1) AS INTEGER)) AS diastolic
+      FROM Vitals
+      WHERE profileName = ?
+        AND vitalName = 'BloodPressure'
+        AND date >= date('now','-6 days','localtime')
+      GROUP BY strftime('%Y-%m-%d', date)
+      ORDER BY strftime('%Y-%m-%d', date)
+    `;
         break;
 
       case "Monthly":
         sql = `
           SELECT
-            strftime('%Y-%m', date) AS dateTime,
+            MAX(date || ' ' || replace(time, '.', ':')) AS dateTime,
             AVG(CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER)) AS systolic,
             AVG(CAST(substr(value, instr(value, '/')+1) AS INTEGER)) AS diastolic
           FROM Vitals
           WHERE profileName = ?
             AND vitalName = 'BloodPressure'
             AND date >= date('now', '-11 months', 'start of month')
-          GROUP BY dateTime
-          ORDER BY dateTime
+          GROUP BY strftime('%Y-%m', date)
+          ORDER BY strftime('%Y-%m', date)
         `;
         break;
 
@@ -122,12 +122,10 @@ const BloodPressureGraph = () => {
       return;
     }
 
+    // Map date strings to timestamps for all views
     const { values } = result[0];
-    const rows = values.map(([dateTime, systolic, diastolic]) => ({
-      dateTime:
-        view === "Weekly" || view === "Monthly"
-          ? dateTime
-          : new Date(dateTime).getTime(),
+    const rows = result[0].values.map(([dt, systolic, diastolic]) => ({
+      dateTime: new Date(dt).getTime(),
       systolic,
       diastolic,
     }));
@@ -194,21 +192,11 @@ const BloodPressureGraph = () => {
           />
           <XAxis
             dataKey="dateTime"
-            type={
-              view === "Weekly" || view === "Monthly" ? "category" : "number"
-            }
-            scale={view === "Weekly" || view === "Monthly" ? undefined : "time"}
-            domain={
-              view === "Weekly" || view === "Monthly"
-                ? undefined
-                : ["dataMin", "dataMax"]
-            }
+            type="number"
+            scale="time"
+            domain={["dataMin", "dataMax"]}
             ticks={ticks}
-            tickFormatter={(val) =>
-              view === "Weekly" || view === "Monthly"
-                ? val
-                : formatDateTime(val)
-            }
+            tickFormatter={formatDateTime}
             interval={0}
             angle={-45}
             textAnchor="end"
@@ -221,11 +209,7 @@ const BloodPressureGraph = () => {
             ]}
           />
           <Tooltip
-            labelFormatter={(val) =>
-              view === "Weekly" || view === "Monthly"
-                ? val
-                : formatDateTime(val)
-            }
+            labelFormatter={formatDateTime}
             formatter={(val, name) => [
               val,
               name.charAt(0).toUpperCase() + name.slice(1),

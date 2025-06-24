@@ -233,6 +233,11 @@ const ProfileDetailScreen = () => {
             Add Vital
           </button>
           <button
+            onClick={() => navigate("/abnorVital", { state: { profile } })}
+          >
+            View Abnormal Vitals
+          </button>
+          <button
             onClick={() =>
               navigate("/compvital", { state: { baseProfile: profile } })
             }

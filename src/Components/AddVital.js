@@ -13,7 +13,7 @@ const AddVital = () => {
       route: "/temp",
     },
     // { name: "Blood Glucose", icon: null, route: "/sugar" },
-    { name: "Pulse Rate", route: "/pulse" },
+    { name: "Breathing Rate", route: "/breath" },
     { name: "Heart Rate", route: "/heart" },
     {
       name: "Blood Pressure",

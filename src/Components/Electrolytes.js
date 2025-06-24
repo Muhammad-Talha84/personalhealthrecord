@@ -99,9 +99,9 @@ const Electrolytes = () => {
         parameter: "Chloride",
         value: chloride,
         unit: "mmol/L",
-        ref: "90-110",
-        min: 90,
-        max: 110,
+        ref: "98-107",
+        min: 98,
+        max: 107,
       },
       {
         parameter: "Anion Gap",
@@ -202,7 +202,7 @@ const Electrolytes = () => {
               type="number"
               value={chloride}
               onChange={(e) => setChloride(e.target.value)}
-              placeholder="90-110"
+              placeholder="98-107"
               required
             />
           </div>

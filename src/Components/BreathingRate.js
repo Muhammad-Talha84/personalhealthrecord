@@ -1,41 +1,36 @@
 import React, { useState, useEffect } from "react";
-import "../CSS/Temperature.css";
 import { useLocation } from "react-router-dom";
-import useDatabase from "../Components/useDatabase";
-
-const Temperature = () => {
-  const { state } = useLocation();
-  const profile = state?.profile;
+import useDatabase from "./useDatabase";
+import "../CSS/PulseRate.css";
+const BreathingRate = () => {
+  const location = useLocation();
+  const { profile } = location.state || {}; // Get selected profile
   const { db, saveDatabase } = useDatabase();
-
   const getToday = () => new Date().toISOString().split("T")[0];
   const getNowTime = () => new Date().toTimeString().slice(0, 5);
-
   const [date, setDate] = useState(getToday());
   const [time, setTime] = useState(getNowTime());
   const [maxTime, setMaxTime] = useState(getNowTime());
-  const [temperature, setTemperature] = useState("");
-  const [unit, setUnit] = useState("°F"); // default unit
-
-  // reload the list after each insert
+  const [rate, setRate] = useState("");
+  const [dataRecords, setDataRecords] = useState([]);
+  // load existing records (with min/max for debugging)
   const loadData = () => {
     if (!db || !profile) return;
     try {
       const stmt = db.prepare(
-        `SELECT date, time, value, unit, minValue, maxValue
+        `SELECT id, date, time, value, unit, minValue, maxValue
          FROM Vitals
          WHERE profileName = ?
-           AND vitalName   = 'Temperature'
+           AND vitalName   = 'BreathingRate'
          ORDER BY date DESC, time DESC`
       );
       stmt.bind([profile.name]);
       const rows = [];
       while (stmt.step()) rows.push(stmt.getAsObject());
       stmt.free();
-      // you can still use setDataRecords(rows) if you show them below
-      console.log("Temperature records:", rows);
+      setDataRecords(rows);
     } catch (err) {
-      console.error("Error loading temperature data:", err);
+      console.error("Error loading breathing rate data:", err);
     }
   };
 
@@ -43,6 +38,7 @@ const Temperature = () => {
     if (db && profile) loadData();
   }, [db, profile]);
 
+  // Prevent future times
   useEffect(() => {
     const today = getToday();
     const now = getNowTime();
@@ -56,28 +52,28 @@ const Temperature = () => {
 
   const handleAdd = (e) => {
     e.preventDefault();
-    if (!date || !time || !temperature || !db || !profile) return;
+    if (!date || !time || !rate || !db || !profile) return;
 
-    const selected = new Date(`${date}T${time}`);
-    if (selected > new Date()) {
+    const ts = new Date(`${date}T${time}`);
+    if (ts > new Date()) {
       alert("Cannot record a future date/time");
       return;
     }
 
-    // define normal range
-    const [minVal, maxVal] = unit === "°F" ? [98, 100] : [36, 39];
+    const val = parseFloat(rate);
+    const minVal = 12;
+    const maxVal = 20;
 
-    const tempVal = parseFloat(temperature);
-    if (isNaN(tempVal)) {
-      alert("Please enter a valid number for temperature.");
+    if (isNaN(val)) {
+      alert("Please enter a valid number for breathing rate.");
       return;
     }
 
-    // ⚠️ warn but still save if outside range
-    if (tempVal < minVal || tempVal > maxVal) {
+    // Warn & still save if out of normal range
+    if (val < minVal || val > maxVal) {
       const ok = window.confirm(
-        `⚠️ ${tempVal}${unit} is outside the normal range ` +
-          `(${minVal}–${maxVal}${unit}).\n\nSave anyway?`
+        `⚠️ ${val} breaths/min is outside the normal range ` +
+          `(${minVal}–${maxVal} breaths/min).\n\nSave anyway?`
       );
       if (!ok) return;
     }
@@ -90,10 +86,10 @@ const Temperature = () => {
       );
       stmt.run([
         profile.name,
-        "Temperature",
-        "temperature",
-        tempVal,
-        unit,
+        "BreathingRate",
+        "breathing-rate",
+        val,
+        "breaths/min",
         date,
         time,
         minVal,
@@ -102,18 +98,18 @@ const Temperature = () => {
       stmt.free();
       saveDatabase();
       loadData();
-      setTemperature("");
+      setRate("");
       setDate(getToday());
       setTime(getNowTime());
     } catch (err) {
-      console.error("Error inserting temperature record:", err);
+      console.error("Error inserting breathing rate record:", err);
     }
   };
 
   return (
-    <div className="temp-container">
-      <div className="temp-card">
-        <h2>Record Temperature</h2>
+    <div className="pulse-container">
+      <div className="pulse-card">
+        <h2>Record Breathing Rate</h2>
         <form onSubmit={handleAdd}>
           <div className="input-group">
             <label>Date:</label>
@@ -136,25 +132,17 @@ const Temperature = () => {
             />
           </div>
           <div className="input-group">
-            <label>Unit:</label>
-            <select value={unit} onChange={(e) => setUnit(e.target.value)}>
-              <option value="°F">°F</option>
-              <option value="°C">°C</option>
-            </select>
-          </div>
-          <div className="input-group">
-            <label>Temperature ({unit}):</label>
+            <label>Breaths/Min:</label>
             <input
               type="number"
-              value={temperature}
-              placeholder={`Enter temperature in ${unit}`}
-              onChange={(e) => setTemperature(e.target.value)}
-              step="0.1"
+              value={rate}
+              placeholder="e.g. 16"
+              onChange={(e) => setRate(e.target.value)}
               required
             />
           </div>
           <button type="submit" className="submit-button">
-            Add Temperature
+            Add Breathing Rate
           </button>
         </form>
       </div>
@@ -162,4 +150,4 @@ const Temperature = () => {
   );
 };
 
-export default Temperature;
+export default BreathingRate;

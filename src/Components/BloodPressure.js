@@ -1,3 +1,4 @@
+// src/screens/BloodPressure.js
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
@@ -5,82 +6,105 @@ import "../CSS/BloodPressure.css";
 
 const BloodPressure = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  // Destructure both db and saveDatabase from the hook
+  const { state } = useLocation();
+  const profile = state?.profile;
   const { db, saveDatabase } = useDatabase();
 
-  // Ensure consistent naming; adjust if your state uses a different key
-  const { profile, data: initialData } = location.state || {};
-  // Alternatively, if you're using selectedProfile, then ensure you pass it correctly:
-  // const selectedProfile = location.state?.selectedProfile || {};
   const getToday = () => new Date().toISOString().split("T")[0];
   const getNowTime = () => new Date().toTimeString().slice(0, 5);
-  // Use the same profile object as Temperature code if possible
-  // const initialData = location.state?.data || [];
-  const [data, setData] = useState(initialData);
+
+  const [data, setData] = useState([]);
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
   const [date, setDate] = useState(getToday());
   const [time, setTime] = useState(getNowTime());
   const [maxTime, setMaxTime] = useState(getNowTime());
 
-  // Load blood pressure records from the database
+  // load existing BP records (including min/max)
   const loadData = () => {
-    if (db && profile) {
-      try {
-        const stmt = db.prepare(
-          "SELECT date, time, value FROM Vitals WHERE profileName = ? AND vitalName = 'BloodPressure'"
-        );
-        stmt.bind([profile.name]);
-        const rows = [];
-        while (stmt.step()) {
-          rows.push(stmt.getAsObject());
-        }
-        stmt.free();
-        setData(rows); // Use setData instead of setDataRecords
-      } catch (error) {
-        console.error("Error loading blood pressure data:", error);
-      }
+    if (!db || !profile) return;
+    try {
+      const stmt = db.prepare(
+        `SELECT id, date, time, value, unit, minValue, maxValue
+         FROM Vitals
+         WHERE profileName = ?
+           AND vitalName   = 'BloodPressure'
+         ORDER BY date DESC, time DESC`
+      );
+      stmt.bind([profile.name]);
+      const rows = [];
+      while (stmt.step()) rows.push(stmt.getAsObject());
+      stmt.free();
+      setData(rows);
+    } catch (err) {
+      console.error("Error loading blood pressure data:", err);
     }
   };
 
   useEffect(() => {
-    if (db && profile) {
-      loadData();
-    }
+    if (db && profile) loadData();
   }, [db, profile]);
+
+  // prevent future times
   useEffect(() => {
     const today = getToday();
-    const nowTime = getNowTime();
+    const now = getNowTime();
     if (date === today) {
-      setMaxTime(nowTime);
-      if (time > nowTime) setTime(nowTime);
+      setMaxTime(now);
+      if (time > now) setTime(now);
     } else {
       setMaxTime("23:59");
     }
   }, [date, time]);
+
   const handleAdd = (e) => {
     e.preventDefault();
-    // Validate all fields are provided; adjust property name if needed
-    if (!date || !time || !systolic || !diastolic || !db || !profile?.name)
-      return;
-    const selected = new Date(`${date}T${time}`);
-    const now = new Date();
-    if (selected > now) {
+    if (!profile || !db || !systolic || !diastolic || !date || !time) return;
+
+    const ts = new Date(`${date}T${time}`);
+    if (ts > new Date()) {
       alert("Cannot record a future date/time");
       return;
     }
+
+    const sys = parseInt(systolic, 10);
+    const dia = parseInt(diastolic, 10);
+    if (isNaN(sys) || isNaN(dia)) {
+      alert("Please enter valid numbers for both systolic and diastolic.");
+      return;
+    }
+
+    // define your normal ranges here:
+    const minSys = 90,
+      maxSys = 120;
+    const minDia = 60,
+      maxDia = 80;
+
+    // warn & save if out of range
+    if (sys < minSys || sys > maxSys || dia < minDia || dia > maxDia) {
+      const ok = window.confirm(
+        `⚠️ ${sys}/${dia} mmHg is outside the normal range\n` +
+          `(Systolic: ${minSys}–${maxSys}, Diastolic: ${minDia}–${maxDia}).\n\n` +
+          `Save anyway?`
+      );
+      if (!ok) return;
+    }
+
     try {
       const stmt = db.prepare(
-        "INSERT INTO Vitals (profileName, vitalName, value, unit, date, time) VALUES (?, ?, ?, ?, ?, ?)"
+        `INSERT INTO Vitals
+           (profileName, vitalName, value, unit, date, time, minValue, maxValue)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       );
       stmt.run([
         profile.name,
         "BloodPressure",
-        `${systolic}/${diastolic}`,
+        `${sys}/${dia}`,
         "mmHg",
         date,
         time,
+        `${minSys}/${minDia}`,
+        `${maxSys}/${maxDia}`,
       ]);
       stmt.free();
       saveDatabase();
@@ -89,8 +113,8 @@ const BloodPressure = () => {
       setDiastolic("");
       setDate(getToday());
       setTime(getNowTime());
-    } catch (error) {
-      console.error("Error inserting blood pressure record:", error);
+    } catch (err) {
+      console.error("Error inserting blood pressure record:", err);
     }
   };
 
@@ -98,47 +122,69 @@ const BloodPressure = () => {
     <div className="bloodpressurecontainer">
       <div className="card">
         <h2>Blood Pressure Tracker</h2>
-        {/* <h3>Patient: {profile?.Name || profile?.name}</h3> */}
-        {/* <p>Relation: {profile?.relation}</p> */}
         <form onSubmit={handleAdd}>
           <label>Systolic:</label>
           <input
-            style={{ width: "150px" }}
             type="number"
-            placeholder="Systolic Pressure"
+            placeholder="e.g. 120"
             value={systolic}
             onChange={(e) => setSystolic(e.target.value)}
             required
           />
           <label>Diastolic:</label>
           <input
-            style={{ width: "150px" }}
             type="number"
-            placeholder="Diastolic Pressure"
+            placeholder="e.g. 80"
             value={diastolic}
             onChange={(e) => setDiastolic(e.target.value)}
             required
           />
           <label>Date:</label>
           <input
-            style={{ width: "150px" }}
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            max={getToday()}
             required
           />
           <label>Time:</label>
           <input
-            style={{ width: "150px" }}
             type="time"
             value={time}
-            max={maxTime}
             onChange={(e) => setTime(e.target.value)}
+            max={maxTime}
             required
           />
           <button type="submit">Add Blood Pressure</button>
         </form>
       </div>
+
+      {/* Optional: debug list including min/max */}
+      {/* <div className="records-list">
+        <h3>All BP Records</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Value</th>
+              <th>Normal Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((r) => (
+              <tr key={r.id}>
+                <td>{r.date}</td>
+                <td>{r.time}</td>
+                <td>{r.value}</td>
+                <td>
+                  {r.minValue} – {r.maxValue}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div> */}
 
       <div className="tabs">
         <button

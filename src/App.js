@@ -24,8 +24,9 @@ import AbnormalReports from "./Components/AbnormalReports";
 import Electrolytes from "./Components/Electrolytes";
 import CompareScreen from "./Components/CompareScreen";
 import LabParameterGraph from "./Components/LabParameterGraph";
-import PulseRate from "./Components/PulseRate";
+import BreathingRate from "./Components/BreathingRate";
 import CompareVitals from "./Components/CompareVitals";
+import AbnormalVitalScreen from "./Components/AbnormalVitalScreen";
 function App() {
   return (
     <Router>
@@ -42,7 +43,7 @@ function App() {
         {/* <Route path="/sugar" element={<Sugar />} /> */}
 
         {/* PULSE RATE */}
-        <Route path="/pulse" element={<PulseRate />} />
+        <Route path="/breath" element={<BreathingRate />} />
         {/* Temperature */}
         <Route path="/temp" element={<Temperature />} />
         {/* Add Profile */}
@@ -83,6 +84,8 @@ function App() {
         <Route path="/graph" element={<LabParameterGraph />} />
         {/* Compare vitals */}
         <Route path="/compvital" element={<CompareVitals />} />
+        {/* abnormal vital screen */}
+        <Route path="abnorVital" element={<AbnormalVitalScreen />} />
       </Routes>
     </Router>
   );
