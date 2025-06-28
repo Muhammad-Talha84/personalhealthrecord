@@ -1,3 +1,4 @@
+// CompareVitals.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import useDatabase from "./useDatabase";
 import { useLocation } from "react-router-dom";
@@ -12,27 +13,33 @@ import {
   Legend,
 } from "recharts";
 
+// A simple color palette for chart lines
+const COLORS = [
+  "#8884d8", // purple
+  "#82ca9d", // green
+  "#ff7300", // orange
+  "#ff0000", // red
+  "#00aaff", // blue
+  "#aa00ff", // magenta
+  "#ffdd00", // yellow
+];
+
 export default function CompareVitals() {
   const { db } = useDatabase();
   const location = useLocation();
 
-  // ── Form State ─────────────────────────────────────────────────────────────
   const [profiles, setProfiles] = useState([]);
   const [selectedProfiles, setSelectedProfiles] = useState(
     location.state?.baseProfile ? [location.state.baseProfile.name] : []
   );
   const [vitalTypes, setVitalTypes] = useState([]);
   const [selectedVital, setSelectedVital] = useState("");
-  // NEW: pick systolic or diastolic
   const [bpComponent, setBpComponent] = useState("systolic");
-
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-
-  // ── Pivoted comparison rows ─────────────────────────────────────────────────
   const [comparisonRows, setComparisonRows] = useState([]);
 
-  // ── 1) Load profiles ────────────────────────────────────────────────────────
+  // Load profiles
   useEffect(() => {
     if (!db) return;
     const email = localStorage.getItem("currentUserEmail");
@@ -44,33 +51,30 @@ export default function CompareVitals() {
     setProfiles(out);
   }, [db]);
 
-  // ── 2) Load distinct vitals ────────────────────────────────────────────────
+  // Load vital types
   useEffect(() => {
     if (!db) return;
     const stmt = db.prepare(
       "SELECT DISTINCT vitalName, minValue, maxValue FROM Vitals"
     );
     const out = [];
-    while (stmt.step()) {
-      out.push(stmt.getAsObject());
-    }
+    while (stmt.step()) out.push(stmt.getAsObject());
     stmt.free();
     setVitalTypes(out);
   }, [db]);
 
-  // ── 3) Fetch & pivot on “Run Comparison” ───────────────────────────────────
+  // Compare handler
   const handleCompare = () => {
     if (
       !db ||
       !selectedVital ||
-      selectedProfiles.length < 1 ||
+      selectedProfiles.length < 2 ||
       !fromDate ||
       !toDate
     ) {
-      alert("Please select at least one profile, a vital, and a date range.");
+      alert("Select at least 2 profiles, a vital, and date range.");
       return;
     }
-
     const placeholders = selectedProfiles.map(() => "?").join(",");
     const sql = `
       SELECT profileName, date, time, value, unit, minValue, maxValue
@@ -89,15 +93,11 @@ export default function CompareVitals() {
 
     const pivot = {};
     rows.forEach((r) => {
-      // parse out systolic/diastolic if BP
-      let num;
+      let num = parseFloat(r.value);
       if (selectedVital.toLowerCase() === "bloodpressure") {
-        const parts = r.value.split("/").map((x) => parseFloat(x));
-        num = bpComponent === "diastolic" ? parts[1] : parts[0];
-      } else {
-        num = parseFloat(r.value);
+        const [sys, dia] = r.value.split("/").map(parseFloat);
+        num = bpComponent === "diastolic" ? dia : sys;
       }
-
       const abnormal =
         !isNaN(num) &&
         ((r.minValue != null && num < r.minValue) ||
@@ -114,35 +114,27 @@ export default function CompareVitals() {
     setComparisonRows(Object.values(pivot));
   };
 
-  // ── 4) Build chartData array ───────────────────────────────────────────────
-  const chartData = useMemo(() => {
-    return comparisonRows.map((row) => {
-      const o = { date: row.date };
-      selectedProfiles.forEach((name) => {
-        o[name] = row[name]?.value ?? null;
-      });
-      return o;
-    });
-  }, [comparisonRows, selectedProfiles]);
-
-  const [p1, p2] = selectedProfiles;
-  const chartData1 = useMemo(
-    () => chartData.map((r) => ({ date: r.date, [p1]: r[p1] })),
-    [chartData, p1]
-  );
-  const chartData2 = useMemo(
-    () => chartData.map((r) => ({ date: r.date, [p2]: r[p2] })),
-    [chartData, p2]
+  // Build chart data
+  const chartData = useMemo(
+    () =>
+      comparisonRows.map((row) => {
+        const point = { date: row.date };
+        selectedProfiles.forEach((name) => {
+          point[name] = row[name]?.value ?? null;
+        });
+        return point;
+      }),
+    [comparisonRows, selectedProfiles]
   );
 
   return (
     <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
       <h2 style={{ textAlign: "center" }}>Compare Vitals</h2>
 
-      {/* ── Form Controls ───────────────────────────────────────────────────── */}
+      {/* Controls */}
       <div style={{ marginBottom: 16 }}>
         <label>
-          Vital&nbsp;
+          Vital{" "}
           <select
             value={selectedVital}
             onChange={(e) => setSelectedVital(e.target.value)}
@@ -156,7 +148,6 @@ export default function CompareVitals() {
           </select>
         </label>
 
-        {/* NEW: systolic/diastolic toggle */}
         {selectedVital.toLowerCase() === "bloodpressure" && (
           <span style={{ marginLeft: 16 }}>
             <label>
@@ -183,7 +174,7 @@ export default function CompareVitals() {
         )}
 
         <label style={{ marginLeft: 16 }}>
-          From&nbsp;
+          From{" "}
           <input
             type="date"
             value={fromDate}
@@ -192,7 +183,7 @@ export default function CompareVitals() {
         </label>
 
         <label style={{ marginLeft: 16 }}>
-          To&nbsp;
+          To{" "}
           <input
             type="date"
             value={toDate}
@@ -201,108 +192,77 @@ export default function CompareVitals() {
         </label>
       </div>
 
-      {/* ── Profile Checkboxes ───────────────────────────────────────────────── */}
+      {/* Profile selection */}
       <div style={{ marginBottom: 16 }}>
-        <strong>Select Profiles (max 2):</strong>
+        <strong>Select Profiles:</strong>
         {profiles.map((p) => (
-          <label
-            key={p.id}
-            style={{
-              marginLeft: 8,
-              opacity:
-                !selectedProfiles.includes(p.name) &&
-                selectedProfiles.length >= 2
-                  ? 0.5
-                  : 1,
-            }}
-          >
+          <label key={p.id} style={{ marginLeft: 8 }}>
             <input
               type="checkbox"
               value={p.name}
               checked={selectedProfiles.includes(p.name)}
-              disabled={
-                !selectedProfiles.includes(p.name) &&
-                selectedProfiles.length >= 2
-              }
               onChange={(e) => {
                 const name = e.target.value;
                 setSelectedProfiles((prev) =>
                   prev.includes(name)
                     ? prev.filter((x) => x !== name)
-                    : prev.length < 2
-                    ? [...prev, name]
-                    : prev
+                    : [...prev, name]
                 );
               }}
-            />
+            />{" "}
             {p.name} ({p.relation})
           </label>
         ))}
-        <div style={{ fontSize: "0.9rem", color: "#555", marginTop: 4 }}>
-          {selectedProfiles.length} selected (max 2)
-        </div>
       </div>
 
       <button
         onClick={handleCompare}
         disabled={
-          !selectedVital || selectedProfiles.length < 1 || !fromDate || !toDate
+          !selectedVital || selectedProfiles.length < 2 || !fromDate || !toDate
         }
       >
         Run Comparison
       </button>
 
-      {/* ── Side-by-Side Charts ──────────────────────────────────────────────── */}
-      {selectedProfiles.length === 2 && chartData.length > 0 && (
-        <div
-          style={{ display: "flex", gap: 20, marginTop: 32, flexWrap: "wrap" }}
-        >
-          {[
-            [p1, chartData1],
-            [p2, chartData2],
-          ].map(([prof, data]) => (
-            <div key={prof} style={{ flex: 1, minWidth: 250, height: 300 }}>
-              <h4 style={{ textAlign: "center" }}>
-                {prof} – {selectedVital}
-                {selectedVital.toLowerCase() === "bloodpressure"
-                  ? ` (${bpComponent})`
-                  : ""}
-              </h4>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey={prof}
-                    name={prof}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ))}
+      {/* Combined Line Chart with distinct colors */}
+      {chartData.length > 0 && (
+        <div style={{ marginTop: 32, width: "100%", height: 400 }}>
+          <ResponsiveContainer>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {selectedProfiles.map((name, idx) => (
+                <Line
+                  key={name}
+                  type="monotone"
+                  dataKey={name}
+                  name={name}
+                  stroke={COLORS[idx % COLORS.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
 
-      {/* ── Raw Comparison Table ──────────────────────────────────────────────── */}
+      {/* Table */}
       {comparisonRows.length > 0 && (
-        <div style={{ overflowX: "auto", marginTop: 32 }}>
-          <table border="1" cellPadding="6" style={{ minWidth: 600 }}>
+        <div style={{ marginTop: 32, overflowX: "auto" }}>
+          <table
+            border="1"
+            cellPadding="6"
+            style={{ borderCollapse: "collapse", minWidth: 600 }}
+          >
             <thead>
               <tr>
                 <th>Date</th>
                 {selectedProfiles.map((name) => (
-                  <th key={name}>
-                    {name}
-                    {selectedVital.toLowerCase() === "bloodpressure"
-                      ? ` (${bpComponent})`
-                      : ""}
-                  </th>
+                  <th key={name}>{name}</th>
                 ))}
               </tr>
             </thead>
@@ -312,7 +272,8 @@ export default function CompareVitals() {
                   <td>{row.date}</td>
                   {selectedProfiles.map((name) => {
                     const cell = row[name] || {
-                      value: "–",
+                      value: "—",
+                      unit: "",
                       isAbnormal: false,
                     };
                     return (
@@ -326,9 +287,9 @@ export default function CompareVitals() {
                           fontWeight: cell.isAbnormal ? "bold" : undefined,
                         }}
                       >
-                        {cell.value !== "–"
-                          ? `${cell.value} ${cell.unit || ""}`
-                          : "–"}
+                        {cell.value !== "—"
+                          ? `${cell.value} ${cell.unit}`
+                          : "—"}
                       </td>
                     );
                   })}
