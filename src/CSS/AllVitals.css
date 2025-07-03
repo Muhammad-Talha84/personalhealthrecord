@@ -1,0 +1,65 @@
+/* AllVitals.css */
+
+.allVitalsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #f4f4f4;
+  min-height: 100vh;
+}
+
+.allVitalsContainer h1 {
+  margin-bottom: 30px;
+  font-size: 2rem;
+  color: #333;
+}
+
+/* Each vital’s chart section */
+.vitalChartSection {
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Title above each chart */
+.vitalChartSection h3 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  text-transform: capitalize;
+  color: #555;
+  text-align: left;
+}
+
+/* Wrapper around the <ResponsiveContainer> */
+.vitalChartSection .recharts-wrapper {
+  width: 100% !important; /* override inline width */
+  height: 200px !important; /* override inline height */
+}
+
+/* “No readings” message */
+.vitalChartSection p {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+/* Back button (if you add it here later) */
+.allVitalsContainer button {
+  padding: 10px 20px;
+  border: none;
+  background: #8884d8;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.allVitalsContainer button:hover {
+  background: #776bbf;
+}

@@ -45,66 +45,76 @@ export default function VitalDetail() {
     let params = [profile.name, type];
 
     switch (period) {
+      case "recent":
+        sql = `
+          SELECT
+            date || ' ' || replace(time, '.', ':') AS dateTime,
+            value
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName   = ?
+          ORDER BY datetime(
+            date || ' ' || replace(time, '.', ':')
+          ) DESC
+          LIMIT 1;
+        `;
+        break;
+
       case "daily":
         sql = `
         SELECT
-        date || ' ' || replace(time, '.', ':')  AS dateTime,
-        value
-      FROM Vitals
-      WHERE profileName = ?
-        AND vitalName   = ?
-        AND date = date('now','localtime')
-      ORDER BY dateTime;
+          date || ' ' || replace(time, '.', ':') AS dateTime,
+          value
+        FROM Vitals
+        WHERE profileName = ?
+          AND vitalName   = ?
+          AND date = date('now','localtime')
+        ORDER BY dateTime;
         `;
         break;
 
       case "weekly":
         sql = `
         SELECT
-      -- rename "day" → "dateTime"
-      strftime('%Y-%m-%d', date)   AS dateTime,
-      -- rename "avgValue" → "value"
-      AVG(value)                   AS value
-    FROM Vitals
-    WHERE profileName = ?
-      AND vitalName   = ?
-      AND date >= date('now','-6 days','localtime')
-    GROUP BY dateTime
-    ORDER BY dateTime;
+          strftime('%Y-%m-%d', date) AS dateTime,
+          AVG(value)                   AS value
+        FROM Vitals
+        WHERE profileName = ?
+          AND vitalName   = ?
+          AND date >= date('now','-6 days','localtime')
+        GROUP BY dateTime
+        ORDER BY dateTime;
         `;
         break;
 
       case "monthly":
         sql = `
         SELECT
-      month,
-      dateTime,
-      value
-    FROM (
-      SELECT
-        strftime('%Y-%m', date)                                       AS month,
-        -- normalize dots to colons so SQLite can parse AM/PM
-        strftime(
-          '%Y-%m-%d %H:%M',
-          datetime(
-            date || ' ' ||
-            replace(time, '.', ':')
-          )
-        )                                                              AS dateTime,
-        value,
-        ROW_NUMBER() OVER (
-          PARTITION BY strftime('%Y-%m', date)
-          ORDER BY datetime(
-            date || ' ' ||
-            replace(time, '.', ':')
-          ) DESC
-        )                                                              AS rn
-      FROM Vitals
-      WHERE profileName = ?
-        AND vitalName   = ?
-    )
-    WHERE rn = 1
-    ORDER BY month;
+          month,
+          dateTime,
+          value
+        FROM (
+          SELECT
+            strftime('%Y-%m', date)                                       AS month,
+            strftime(
+              '%Y-%m-%d %H:%M',
+              datetime(
+                date || ' ' || replace(time, '.', ':')
+              )
+            )                                                              AS dateTime,
+            value,
+            ROW_NUMBER() OVER (
+              PARTITION BY strftime('%Y-%m', date)
+              ORDER BY datetime(
+                date || ' ' || replace(time, '.', ':')
+              ) DESC
+            )                                                              AS rn
+          FROM Vitals
+          WHERE profileName = ?
+            AND vitalName   = ?
+        )
+        WHERE rn = 1
+        ORDER BY month;
         `;
         break;
 
@@ -123,10 +133,14 @@ export default function VitalDetail() {
         `;
         params.push(fromDate, toDate);
         break;
+
+      default:
+        break;
     }
-    if (period == "all") {
+
+    if (period === "all") {
       if (!state?.readings?.length) return;
-      const transformed = state?.readings
+      const transformed = state.readings
         .map((r) => {
           const dt = new Date(`${r.date} ${r.time}`);
           return {
@@ -139,13 +153,11 @@ export default function VitalDetail() {
         .sort((a, b) => a.dateTime - b.dateTime);
       setReadings(transformed);
     } else {
-      // run & map the result:
       const result = db.exec(sql, params);
       if (!result.length) {
         setReadings([]);
         return;
       }
-
       const { columns, values } = result[0];
       const mapped = values.map((row) => {
         const obj = columns.reduce((o, col, i) => {
@@ -159,7 +171,6 @@ export default function VitalDetail() {
           value: Number(obj.value),
         };
       });
-
       setReadings(mapped);
     }
   }, [db, profile, type, period, fromDate, toDate]);
@@ -176,7 +187,7 @@ export default function VitalDetail() {
 
       <div className="controls">
         {/* Period buttons */}
-        {["all", "daily", "weekly", "monthly", "custom"].map((p) => (
+        {["all", "recent", "daily", "weekly", "monthly", "custom"].map((p) => (
           <button
             key={p}
             onClick={() => setPeriod(p)}

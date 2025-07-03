@@ -39,6 +39,21 @@ const BloodPressureGraph = () => {
     let params = [profile.name];
 
     switch (view) {
+      case "Most Recent": // show just the single latest reading
+        sql = `
+        SELECT
+          date || ' ' || replace(time, '.', ':') AS dateTime,
+          CAST(substr(value, 1, instr(value, '/')-1) AS INTEGER) AS systolic,
+          CAST(substr(value, instr(value, '/')+1) AS INTEGER) AS diastolic
+        FROM Vitals
+        WHERE profileName = ?
+          AND vitalName = 'BloodPressure'
+        ORDER BY datetime(
+          date || ' ' || replace(time, '.', ':')
+        ) DESC
+        LIMIT 1
+      `;
+        break;
       case "Daily":
         sql = `
           SELECT
@@ -123,7 +138,7 @@ const BloodPressureGraph = () => {
     }
 
     // Map date strings to timestamps for all views
-    const { values } = result[0];
+    //const { values } = result[0];
     const rows = result[0].values.map(([dt, systolic, diastolic]) => ({
       dateTime: new Date(dt).getTime(),
       systolic,
@@ -139,22 +154,24 @@ const BloodPressureGraph = () => {
     <div style={{ width: "100%", height: 350 }}>
       <h2>Blood Pressure Over Time</h2>
       <div style={{ marginBottom: 16 }}>
-        {["All", "Daily", "Weekly", "Monthly", "Custom"].map((v) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            style={{
-              marginRight: 8,
-              padding: "6px 12px",
-              background: view === v ? "#007bff" : "#fff",
-              color: view === v ? "#fff" : "#000",
-              border: "1px solid #ccc",
-              borderRadius: 4,
-            }}
-          >
-            {v}
-          </button>
-        ))}
+        {["All", "Most Recent", "Daily", "Weekly", "Monthly", "Custom"].map(
+          (v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              style={{
+                marginRight: 8,
+                padding: "6px 12px",
+                background: view === v ? "#007bff" : "#fff",
+                color: view === v ? "#fff" : "#000",
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
+            >
+              {v}
+            </button>
+          )
+        )}
       </div>
 
       {view === "Custom" && (
