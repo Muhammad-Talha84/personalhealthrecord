@@ -395,6 +395,9 @@ const ProfileDetailScreen = () => {
             >
               Add Lab Report
             </button>
+            <button onClick={() => navigate("/allrep", { state: { profile } })}>
+              All Report
+            </button>
           </div>
         </div>
       </div>

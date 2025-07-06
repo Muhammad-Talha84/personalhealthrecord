@@ -28,6 +28,7 @@ import BreathingRate from "./Components/BreathingRate";
 import CompareVitals from "./Components/CompareVitals";
 import AbnormalVitalScreen from "./Components/AbnormalVitalScreen";
 import AllVitalsScreen from "./Components/AllVitalsScreen";
+import AllReportsScreen from "./Components/AllReportsScreen";
 function App() {
   return (
     <Router>
@@ -89,6 +90,8 @@ function App() {
         <Route path="abnorVital" element={<AbnormalVitalScreen />} />
         {/* all vitals screen  */}
         <Route path="allvital" element={<AllVitalsScreen />} />
+        {/* all reports screen */}
+        <Route path="allrep" element={<AllReportsScreen />} />
       </Routes>
     </Router>
   );

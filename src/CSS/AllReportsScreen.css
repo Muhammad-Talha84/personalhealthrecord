@@ -1,0 +1,73 @@
+/* AllReportsScreen.css */
+.all-reports-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.toggle-buttons button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.report-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.report-card h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 8px;
+}
+
+.report-group {
+  margin-top: 12px;
+}
+
+.report-group h4 {
+  margin-bottom: 6px;
+  font-size: 1rem;
+  color: #333;
+}
+
+.report-group p {
+  margin: 2px 0;
+  font-size: 0.9rem;
+}
+
+.actions {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+}
+
+.actions button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #7ed321;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
