@@ -1,6 +1,7 @@
 // src/screens/AbnormalVitalsScreen.js
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import "../CSS/AbnormalVitalScreen.css";
 import useDatabase from "../Components/useDatabase";
 import {
   LineChart,
