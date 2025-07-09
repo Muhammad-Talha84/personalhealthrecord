@@ -231,7 +231,8 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import useDatabase from "../Components/useDatabase";
 import "../CSS/Rft.css";
-
+const getToday = () => new Date().toISOString().split("T")[0];
+const getNowTime = () => new Date().toTimeString().slice(0, 5);
 const getAge = (dob) => {
   if (!dob) return null;
   const today = new Date();
@@ -264,9 +265,6 @@ export default function LipidProfile() {
   const { state } = useLocation();
   const profile = state?.profile;
   const { db, saveDatabase } = useDatabase();
-
-  const getToday = () => new Date().toISOString().split("T")[0];
-  const getNowTime = () => new Date().toTimeString().slice(0, 5);
 
   const [date, setDate] = useState(getToday());
   const [time, setTime] = useState(getNowTime());
@@ -304,7 +302,9 @@ export default function LipidProfile() {
     if (date === today) {
       setMaxTime(now);
       if (time > now) setTime(now);
-    } else setMaxTime("23:59");
+    } else {
+      setMaxTime("23:59");
+    }
   }, [date, time]);
 
   const handleAdd = (e) => {

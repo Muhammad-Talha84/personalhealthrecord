@@ -29,6 +29,20 @@ import CompareVitals from "./Components/CompareVitals";
 import AbnormalVitalScreen from "./Components/AbnormalVitalScreen";
 import AllVitalsScreen from "./Components/AllVitalsScreen";
 import AllReportsScreen from "./Components/AllReportsScreen";
+// TASK IMPLEMENT
+import PreBloodPressure from "./Components/PreBloodPressure";
+import PreBreathingRate from "./Components/PreBreathingRate";
+import PreHeartRate from "./Components/PreHeartRate";
+import PreTemperature from "./Components/PreTemperature";
+// TASK IMPLEMET
+import PreElectroytes from "./Components/PreElectroytes";
+
+import PreBloodCP from "./Components/PreBloodCP";
+import PreTFT from "./Components/PreTFT";
+import PreRFT from "./Components/PreRFT";
+import PreLFT from "./Components/PreLFT";
+import PreLipidProfile from "./Components/PreLipidProfile";
+
 function App() {
   return (
     <Router>
@@ -92,6 +106,22 @@ function App() {
         <Route path="allvital" element={<AllVitalsScreen />} />
         {/* all reports screen */}
         <Route path="allrep" element={<AllReportsScreen />} />
+        {/* FOR TASK IMPLEMENTATION */}
+        {/* PreBloodPressure.js */}
+        <Route path="/prebp" element={<PreBloodPressure />} />
+        {/* PreBreathing rate.js */}
+        <Route path="/prebreath" element={<PreBreathingRate />} />
+        {/* Preheart rate.js */}
+        <Route path="/preheart" element={<PreHeartRate />} />
+        {/* PreTemperature.js */}
+        <Route path="/pretemp" element={<PreTemperature />} />
+        {/* FOR TASK IMPLEMENT */}
+        <Route path="preelectrolyte" element={<PreElectroytes />} />
+        <Route path="prerft" element={<PreRFT />} />
+        <Route path="prelft" element={<PreLFT />} />
+        <Route path="prethyroid" element={<PreTFT />} />
+        <Route path="prelipid" element={<PreLipidProfile />} />
+        <Route path="precp" element={<PreBloodCP />} />
       </Routes>
     </Router>
   );

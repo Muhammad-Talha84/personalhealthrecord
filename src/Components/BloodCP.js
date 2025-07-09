@@ -441,7 +441,6 @@ export default function BloodCP() {
           type="time"
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          max={getNowTime()}
           required
         />
 

@@ -40,21 +40,22 @@ const Profile = () => {
         <div className="btnProfile">
           <button onClick={() => navigate("/add")}>Add Profile</button>
         </div>
-    
+
         <div className="profiles-list">
           {profiles.length > 0 ? (
             profiles.map((profile) => (
               <div
                 key={profile.id}
                 className="profile-card"
-                onClick={() => handleProfileClick(profile)} // Click event to navigate
-                style={{ cursor: "pointer" }} // Make it look clickable
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#bbdefb")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#e3f2fd")
-                }
+                // onClick={() => handleProfileClick(profile)} // Click event to navigate
+                // style={{ cursor: "pointer" }} // Make it look clickable
+                // onMouseEnter={(e) =>
+                //   (e.currentTarget.style.background = "#bbdefb")
+                // }
+                // onMouseLeave={(e) =>
+                //   (e.currentTarget.style.background = "#e3f2fd")
+                // }
+                onClick={() => handleProfileClick(profile)}
               >
                 <h3>{profile.name}</h3>
                 <p>Relation: {profile.relation}</p>

@@ -1,4 +1,4 @@
-.profiledetailContainer {
+/* .profiledetailContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,42 +15,42 @@
   width: 90%;
   max-width: 500px;
   margin-bottom: 20px;
-}
+} */
 
 /* new: grid container for the profile fields */
-.profile-grid {
+/* .profile-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 16px; /* space between items */
-  margin-bottom: 16px;
+/* margin-bottom: 16px;
 }
 
 /* each field */
-.profile-item {
+/* .profile-item {
   flex: 1 1 140px; /* grow/shrink, basis */
-  background: #f9f9f9;
+/* background: #f9f9f9;
   padding: 8px 12px;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   min-width: 120px; /* prevent too-narrow columns */
-}
+/* } */
 /* ya comments sa hatani ha  */
-.dataSections {
+/* .dataSections {
   display: flex;
   gap: 24px; /* space between vitals & labs */
-  flex-wrap: wrap; /* stack on very small screens */
-  margin-bottom: 20px;
-}
-.vitalsSection,
+/* flex-wrap: wrap; /* stack on very small screens */
+/* margin-bottom: 20px;
+} */
+/* .vitalsSection,
 .labReportsSection {
   flex: 1 1 300px; /* grow/shrink, basis of ~300px */
-  background: #fff;
+/* background: #fff;
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
+}   */
 
-.dataSections {
+/* .dataSections {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -76,9 +76,9 @@
   border-radius: 5px;
   margin-bottom: 10px;
   transition: transform 0.2s ease-in-out;
-}
+} */
 
-.vitalItem:hover,
+/* .vitalItem:hover,
 .labReportItem:hover {
   background: #e6e6e6;
   transform: translateY(-3px);
@@ -119,8 +119,206 @@ button:hover {
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.3s;
+} */
+
+/* .abnormalButton:hover {
+  background: #b52a37;
+} */
+
+.profiledetailContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  background: #f0f2f5;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Profile Details Card */
+.details {
+  background: #ffffff;
+  padding: 25px 30px;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+  transition: transform 0.2s ease;
+}
+
+.details:hover {
+  transform: translateY(-2px);
+}
+
+.details h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 24px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.details p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #444;
+}
+
+.details p strong {
+  color: #000;
+}
+
+/* Abnormal Reports Button */
+.abnormalButton {
+  margin-top: 20px;
+  background: #ff4d4f;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s ease;
 }
 
 .abnormalButton:hover {
-  background: #b52a37;
+  background: #d9363e;
+}
+
+/* Data Section Wrapper */
+.dataSections {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+/* Vitals & Reports Cards */
+.vitalsSection,
+.labReportsSection {
+  background: #ffffff;
+  padding: 20px 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  max-width: 460px;
+}
+
+.vitalsSection h3,
+.labReportsSection h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+/* List Items */
+.vitalItem,
+.labReportItem {
+  padding: 12px 15px;
+  background: #f9fafc;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.vitalItem:hover,
+.labReportItem:hover {
+  background: #edf3f9;
+  transform: translateY(-3px);
+}
+
+.vitalItem p,
+.labReportItem p {
+  margin: 0;
+  font-size: 14.5px;
+  color: #333;
+}
+
+.labReportItem small {
+  color: #777;
+  font-size: 12px;
+}
+
+/* Action Buttons */
+button {
+  background: #007bff;
+  color: white;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 15px;
+  width: 100%;
+  margin-top: 12px;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+/* Chart Section (optional for consistency) */
+.temperatureChart {
+  margin-top: 20px;
+  padding: 10px;
+}
+
+.temperatureChart svg {
+  max-width: 100%;
+}
+.reportShortcuts {
+  margin-top: 20px;
+}
+
+/* Report Shortcuts */
+.reportShortcutList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0.5rem;
+}
+
+.reportShortcutItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-left: 6px solid #0055aa;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.reportShortcutItem:hover {
+  background-color: #eef5ff;
+}
+
+.reportShortcutItem.abnormal {
+  border-color: red;
+  background-color: #ffe5e5;
+}
+
+.reportIcon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.reportName {
+  flex: 1;
+  font-weight: 500;
+}
+
+.warningIcon {
+  color: red;
+  font-size: 1.4rem;
+  margin-left: 0.5rem;
 }

@@ -323,7 +323,7 @@ export default function BloodPressure() {
     `);
     stmt.run([
       profile.name,
-      "BloodPressure",
+      "Blood Pressure",
       `${sys}/${dia}`,
       "mmHg",
       date,

@@ -1,4 +1,4 @@
-.reportContainer {
+/* .reportContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,8 +26,95 @@
 }
 /* Health Overview */
 
-.grid {
+/* .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+} */
+
+/* UMER CODE  */
+
+/* Overall Page Container */
+.reportContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  background: #f0f2f5;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Top Heading Section */
+.section-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+}
+
+.reportContainer h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Card Wrapper */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Button Styling Inside Card */
+.card button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 12px 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.card button:hover {
+  background-color: #115293;
+}
+
+/* Back Button (optional if used) */
+.backbloodcp-button {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #333;
+  position: absolute;
+  top: 20px;
+  left: 20px;
 }
