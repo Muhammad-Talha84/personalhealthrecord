@@ -295,6 +295,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import "../CSS/AbnormalVitalScreen.css";
 
@@ -475,6 +476,7 @@ export default function AbnormalVitalsScreen() {
                       <Tooltip
                         labelFormatter={(ts) => new Date(ts).toLocaleString()}
                       />
+                      <ReferenceLine stroke="red" strokeDasharray="3 3" />
                       <Line dataKey="systolic" dot={{ r: 3 }} />
                       <Line dataKey="diastolic" dot={{ r: 3 }} />
                     </LineChart>

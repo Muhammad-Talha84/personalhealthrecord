@@ -145,3 +145,18 @@ body {
     padding: 20px;
   }
 }
+.genderGroup {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.labelTitle {
+  min-width: 60px;
+}

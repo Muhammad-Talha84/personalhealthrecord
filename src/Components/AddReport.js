@@ -27,12 +27,12 @@ const AddReport = () => {
 
       route: "/lft",
     },
-    {
-      name: "LIPID PROFILE",
+    // {
+    //   name: "LIPID PROFILE",
 
-      route: "/lipid",
-    },
-    { name: "Electrolytes", route: "/electrolyte" },
+    //   route: "/lipid",
+    // },
+    // { name: "Electrolytes", route: "/electrolyte" },
   ];
   const navigate = useNavigate();
   const location = useLocation();

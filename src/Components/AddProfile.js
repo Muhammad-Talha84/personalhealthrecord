@@ -134,9 +134,9 @@ const AddProfile = () => {
         </div>
 
         {/* Gender Field */}
-        <div className="formGroup">
-          <label>Gender:</label>
-          <label>
+        <div className="formGroup gendergroup">
+          <label className="labelTitle">Gender:</label>
+          <label className="radioOption">
             <input
               type="radio"
               name="gender"
@@ -146,7 +146,7 @@ const AddProfile = () => {
             />
             Male
           </label>
-          <label>
+          <label className="radioOption">
             <input
               type="radio"
               name="gender"

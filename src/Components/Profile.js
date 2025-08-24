@@ -39,6 +39,7 @@ const Profile = () => {
         <h2 className="section-title">Profile</h2>
         <div className="btnProfile">
           <button onClick={() => navigate("/add")}>Add Profile</button>
+          {/* <button onClick={() => navigate("/settings")}>Settings</button> */}
         </div>
 
         <div className="profiles-list">

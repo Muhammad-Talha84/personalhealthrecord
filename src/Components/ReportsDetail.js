@@ -230,11 +230,13 @@ import {
 } from "recharts";
 
 export default function ReportsDetail() {
-  const { state } = useLocation();
-  const profile = state?.profile;
-  const report = state?.report;
+  //const { state } = useLocation();
+  // const profile = state?.profile;
+  // const report = state?.report;
   const { db } = useDatabase(); // ← grab the DB instance
-
+  const { state } = useLocation();
+  const { profile, report } = state || {};
+  console.log("REPORT", report);
   // --- HOOKS MUST RUN FIRST ---
   const testName = report?.testName || "";
 
@@ -245,7 +247,7 @@ export default function ReportsDetail() {
       `SELECT *
          FROM LabReports
         WHERE profileName = ?
-          AND testName = ?
+          AND testName = ? 
         ORDER BY date, time`
     );
     stmt.bind([profile.name, testName]);
@@ -255,6 +257,7 @@ export default function ReportsDetail() {
       rows.push(stmt.getAsObject());
     }
     stmt.free();
+    console.log("allThisTest (LabReports rows):", rows.slice(0, 20));
     return rows;
   }, [db, profile?.name, testName]);
 
@@ -312,6 +315,7 @@ export default function ReportsDetail() {
   }
 
   const { date, time } = report;
+  const loc = report.location ?? "-";
 
   return (
     <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
@@ -327,10 +331,13 @@ export default function ReportsDetail() {
         <p>
           <strong>Test Time:</strong> {time}
         </p>
+        {/* <p>
+          <strong>LOCATION:</strong> {loc}
+        </p> */}
       </div>
 
       {/* Parameter & Date Range selector */}
-      <div style={{ marginBottom: 20, textAlign: "center" }}>
+      {/* <div style={{ marginBottom: 20, textAlign: "center" }}>
         <label>
           Plot parameter:&nbsp;
           <select
@@ -363,7 +370,7 @@ export default function ReportsDetail() {
       </div>
 
       {/* Chart */}
-      {chartData.length > 0 ? (
+      {/* {chartData.length > 0 ? (
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -384,8 +391,8 @@ export default function ReportsDetail() {
       ) : (
         <p style={{ textAlign: "center", color: "gray" }}>
           No {selectedParam} data.
-        </p>
-      )}
+      //   </p>
+      // )} } }/*
 
       {/* Table snapshot of this test date */}
       <table
@@ -397,6 +404,7 @@ export default function ReportsDetail() {
             <th style={{ padding: 8 }}>Result</th>
             <th style={{ padding: 8 }}>Unit</th>
             <th style={{ padding: 8 }}>Ref. Value</th>
+            <th style={{ padding: 8 }}>labNote</th>
           </tr>
         </thead>
         <tbody>
@@ -422,6 +430,9 @@ export default function ReportsDetail() {
                   <td style={{ padding: 8 }}>{entry.unit}</td>
                   <td style={{ padding: 8 }}>
                     {entry.minValue} – {entry.maxValue}
+                  </td>
+                  <td style={{ padding: 8 }}>
+                    {entry.labNote ?? entry.note ?? "-"}
                   </td>
                 </tr>
               );

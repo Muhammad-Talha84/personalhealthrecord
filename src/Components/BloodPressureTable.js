@@ -27,6 +27,7 @@ const BloodPressureTable = () => {
             <th>Time</th>
             <th>Systolic</th>
             <th>Diastolic</th>
+            <th>Note:</th>
           </tr>
         </thead>
         <tbody>
@@ -36,6 +37,7 @@ const BloodPressureTable = () => {
               <td>{entry.time}</td>
               <td>{entry.systolic}</td>
               <td>{entry.diastolic}</td>
+              <td>{entry.vitalNote}</td>
             </tr>
           ))}
         </tbody>

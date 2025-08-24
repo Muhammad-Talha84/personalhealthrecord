@@ -297,22 +297,31 @@ const getAge = (dob) => {
   return age;
 };
 
-const getParamRange = (param) => {
+// ✅ Updated to handle both age and gender
+const getParamRange = (param, age, gender) => {
   switch (param) {
     case "Direct Bilirubin":
-      return { min: 0.0, max: 0.3 };
+      return { min: 0.0, max: 0.3 }; // same for all
     case "Indirect Bilirubin":
-      return { min: 0.1, max: 0.8 };
+      return { min: 0.1, max: 0.8 }; // same for all
     case "Total Bilirubin":
-      return { min: 0.2, max: 1.1 };
+      return { min: 0.2, max: 1.1 }; // same for all
+
     case "AST":
-      return { min: 9, max: 40 };
+      return gender === "male" ? { min: 10, max: 40 } : { min: 9, max: 35 };
+
     case "ALT":
-      return { min: 5, max: 50 };
+      return gender === "male" ? { min: 7, max: 55 } : { min: 5, max: 50 };
+
     case "Alkaline Phosphatase":
-      return { min: 56, max: 167 };
+      if (age < 18) {
+        return { min: 100, max: 400 }; // higher in children/teens
+      }
+      return gender === "male" ? { min: 56, max: 142 } : { min: 44, max: 147 };
+
     case "Gamma":
-      return { min: 0, max: 69 };
+      return gender === "male" ? { min: 0, max: 71 } : { min: 0, max: 65 };
+
     default:
       return { min: 0, max: 0 };
   }
@@ -322,6 +331,7 @@ export default function LFT() {
   const location = useLocation();
   const { profile } = location.state || {};
   const { db, saveDatabase } = useDatabase();
+
   const testName = "LFT";
 
   const [date, setDate] = useState(getToday());
@@ -335,12 +345,16 @@ export default function LFT() {
   const [alt, setALT] = useState("");
   const [alkalinePhosphatase, setAlkalinePhosphatase] = useState("");
   const [gamma, setGamma] = useState("");
+  const [note, setNote] = useState("");
+  const [locationField, setLocationField] = useState("");
   const [records, setRecords] = useState([]);
-
+  const [settings, setSettings] = useState([]);
   const loadData = () => {
     if (!db || !profile) return;
     const stmt = db.prepare(
-      `SELECT parameter, result, unit, referenceValue, minValue, maxValue, date, time FROM LabReports WHERE profileName = ? AND testName = ?`
+      `SELECT parameter, result, unit, referenceValue, minValue, maxValue, date, time,location,labNote 
+       FROM LabReports 
+       WHERE profileName = ? AND testName = ?`
     );
     stmt.bind([profile.name, testName]);
     const rows = [];
@@ -352,6 +366,50 @@ export default function LFT() {
   useEffect(() => {
     if (db && profile) loadData();
   }, [db, profile]);
+  //query parameter age dalnay ki waja sa mismatch hoi
+  // useEffect(() => {
+  //   if (!db) return;
+  //   const stmt = db.prepare(
+  //     `SELECT * FROM Settings WHERE vitalName IN (
+  //       "LFT-Indirect Bilirubin(mg/dL)",
+  //       "LFT-Direct Bilirubin(mg/dL)",
+  //       "LFT-Total Bilirubin(mg/dL)",
+  //       "LFT-Alkaline Phosphatase(IU/L)",
+  //       "LFT-Gamma(IU/L)",
+  //       "LFT-AST(IU/L)",
+  //       "LFT-ALT(IU/L)"
+  //     )`
+  //   );
+  //   let loaded = [];
+  //   while (stmt.step()) {
+  //     const { vitalName, gender, minValue, maxValue } = stmt.getAsObject();
+  //     loaded.push({ vitalName, gender, minValue, maxValue });
+  //   }
+  //   stmt.free();
+  //   console.log("LOADED LFT SETTINGS", loaded);
+  //   setSettings(loaded);
+  // }, [db]);
+
+  useEffect(() => {
+    if (!db) return;
+    const stmt = db.prepare(
+      `SELECT * FROM Settings WHERE vitalName LIKE 'LFT-%'`
+    );
+    let loaded = [];
+    while (stmt.step()) {
+      const obj = stmt.getAsObject();
+      // Normalize: remove ::suffix and lowercase gender
+      let { vitalName, gender, minValue, maxValue } = obj;
+      if (typeof vitalName === "string" && vitalName.includes("::")) {
+        vitalName = vitalName.split("::")[0];
+      }
+      gender = typeof gender === "string" ? gender.toLowerCase() : gender;
+      loaded.push({ vitalName, gender, minValue, maxValue });
+    }
+    stmt.free();
+    console.log("LOADED LFT SETTINGS", loaded);
+    setSettings(loaded);
+  }, [db]);
 
   useEffect(() => {
     const today = getToday();
@@ -361,6 +419,71 @@ export default function LFT() {
       if (time > now) setTime(now);
     } else setMaxTime("23:59");
   }, [date, time]);
+  console.log("TALHA", settings);
+  // is ma age wala dala ha jis ki waja sa wo parameter name mismatch kar raha ha
+  // const verifytestfield = (vitalName, gender, age) => {
+  //   console.log("////////////////////", vitalName, gender);
+  //   let vital = "";
+  //   if (vitalName == "Direct Bilirubin") vital = "LFT-Direct Bilirubin(mg/dL)";
+  //   else if (vitalName == "Indirect Bilirubin")
+  //     vital = "LFT-Indirect Bilirubin(mg/dL)";
+  //   else if (vitalName == "Total Bilirubin")
+  //     vital = "LFT-Total Bilirubin(mg/dL)";
+  //   else if (vitalName == "AST") vital = "LFT-AST(IU/L)";
+  //   else if (vitalName == "ALT") vital = "LFT-ALT(IU/L)";
+  //   else if (vitalName == "Alkaline Phosphatase")
+  //     vital = "LFT-Alkaline Phosphatase(IU/L)";
+  //   else if (vitalName == "Gamma") vital = "LFT-Gamma(IU/L)";
+
+  //   let tempGender = "";
+  //   if (gender == "Male") tempGender = "male";
+  //   else if (gender == "Female") tempGender = "female";
+
+  //   console.log(vital);
+  //   // console.log(settings);
+  //   const row = settings.find(
+  //     (s) => s.vitalName === vital && s.gender === tempGender
+  //   );
+  //   console.log(row);
+  //   return { min: row.minValue, max: row.maxValue };
+  // };
+
+  //... ya wala sai ha
+  const verifytestfield = (vitalName, gender, age) => {
+    console.log("////////////////////", vitalName, gender);
+    let vital = "";
+    if (vitalName == "Direct Bilirubin") vital = "LFT-Direct Bilirubin(mg/dL)";
+    else if (vitalName == "Indirect Bilirubin")
+      vital = "LFT-Indirect Bilirubin(mg/dL)";
+    else if (vitalName == "Total Bilirubin")
+      vital = "LFT-Total Bilirubin(mg/dL)";
+    else if (vitalName == "AST") vital = "LFT-AST(IU/L)";
+    else if (vitalName == "ALT") vital = "LFT-ALT(IU/L)";
+    else if (vitalName == "Alkaline Phosphatase")
+      vital = "LFT-Alkaline Phosphatase(IU/L)";
+    else if (vitalName == "Gamma") vital = "LFT-Gamma(IU/L)";
+
+    // Normalize incoming gender (case insensitive)
+    let tempGender = "";
+    if (typeof gender === "string") {
+      const g = gender.toLowerCase();
+      if (g === "male") tempGender = "male";
+      else if (g === "female") tempGender = "female";
+      else tempGender = g; // keep whatever it is (e.g. 'other')
+    }
+
+    // find row (vital names in settings were normalized when loaded)
+    const row = settings.find(
+      (s) => s.vitalName === vital && s.gender === tempGender
+    );
+
+    if (!row) {
+      console.warn("No settings row found for", { vital, tempGender });
+      // Provide a safe default instead of crashing — adjust defaults as you like
+      return { min: 0, max: 0 };
+    }
+    return { min: row.minValue, max: row.maxValue };
+  };
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -372,6 +495,7 @@ export default function LFT() {
       alt,
       alkalinePhosphatase,
       gamma,
+      note,
     ];
     if (inputs.some((v) => v === "")) return alert("Please fill all fields.");
     const ts = new Date(`${date}T${time}`);
@@ -407,17 +531,18 @@ export default function LFT() {
     db.exec("BEGIN TRANSACTION;");
     const stmt = db.prepare(
       `INSERT INTO LabReports
-        (profileName, testName, parameter, result, unit, referenceValue, date, time, minValue, maxValue)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        (profileName, testName, parameter, result, unit, referenceValue, date, time, minValue, maxValue, location,labNote)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`
     );
 
     for (let e of entries) {
-      const { min, max } = getParamRange(e.parameter);
+      const { min, max } = verifytestfield(e.parameter, profile.gender, age);
       const refStr = `${min}-${max}`;
       if (e.value < min || e.value > max) {
         if (
           !window.confirm(
-            `⚠️ ${e.parameter} = ${e.value} is out of range (normal: ${min}–${max}). Continue?`
+            `⚠️ ${e.parameter} value ${e.value} ${e.unit}is out of range (normal: ${profile.gender},age${age}\n` +
+              `${min}–${max}). Continue?`
           )
         ) {
           db.exec("ROLLBACK;");
@@ -435,12 +560,30 @@ export default function LFT() {
         time,
         min,
         max,
+        locationField,
+        note,
       ]);
     }
     stmt.free();
     db.exec("COMMIT;");
     saveDatabase();
     loadData();
+    setRecords((prev) => [
+      ...entries.map((e) => ({
+        parameter: e.parameter,
+        result: e.value,
+        unit: e.unit,
+        referenceValue: `${
+          verifytestfield(e.parameter, profile.gender, age).min
+        }-${verifytestfield(e.parameter, profile.gender, age).max}`,
+        minValue: verifytestfield(e.parameter, profile.gender, age).min,
+        maxValue: verifytestfield(e.parameter, profile.gender, age).max,
+        date,
+        time,
+        note,
+      })),
+      ...prev,
+    ]);
 
     setDirectBilirubin("");
     setIndirectBilirubin("");
@@ -451,16 +594,20 @@ export default function LFT() {
     setGamma("");
     setDate(getToday());
     setTime(getNowTime());
+    setLocationField("");
+    setNote("");
     alert("LFT saved successfully.");
   };
 
   if (!profile) return <p>Select a profile first.</p>;
 
+  const age = getAge(profile.dob);
+  if (settings.length == 0) return <div></div>;
   return (
     <div className="lftContainer">
       <h1>
-        LFT for {profile.name} ({profile.gender}, Age{" "}
-        {getAge(profile.dob) ?? "--"})
+        LFT
+        {/* LFT for {profile.name} ({profile.gender}, Age {age ?? "--"}) */}
       </h1>
       <form onSubmit={handleAdd}>
         <label>Date</label>
@@ -479,7 +626,12 @@ export default function LFT() {
           max={maxTime}
           required
         />
-
+        <label>Note:</label>
+        <input
+          type="text"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
         {[
           "Direct Bilirubin",
           "Indirect Bilirubin",
@@ -507,7 +659,7 @@ export default function LFT() {
             "Alkaline Phosphatase": setAlkalinePhosphatase,
             Gamma: setGamma,
           };
-          const range = getParamRange(param);
+          const range = verifytestfield(param, profile.gender, age);
           return (
             <label key={param}>
               {param}

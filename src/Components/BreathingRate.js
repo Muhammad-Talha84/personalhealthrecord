@@ -301,8 +301,9 @@ export default function BreathingRate() {
     <div className="pulse-container">
       <div className="pulse-card">
         <h2>
-          Record Breathing Rate ({profile.gender}, Age{" "}
-          {getAge(profile.dob) ?? "--"})
+          Record BreathingRate
+          {/* Record Breathing Rate ({profile.gender}, Age{" "}
+          {getAge(profile.dob) ?? "--"}) */}
         </h2>
         <form onSubmit={handleAdd}>
           <div className="input-group">

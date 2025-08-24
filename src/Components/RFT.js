@@ -384,8 +384,9 @@ export default function RFT() {
   return (
     <div className="rftContainer">
       <h2>
-        RFT for {profile.name} ({profile.gender}, Age{" "}
-        {getAge(profile.dob) ?? "--"})
+        RFT
+        {/* RFT for {profile.name} ({profile.gender}, Age{" "}
+        {getAge(profile.dob) ?? "--"}) */}
       </h2>
       <form onSubmit={handleAdd}>
         <label>Date</label>

@@ -42,7 +42,9 @@ import PreTFT from "./Components/PreTFT";
 import PreRFT from "./Components/PreRFT";
 import PreLFT from "./Components/PreLFT";
 import PreLipidProfile from "./Components/PreLipidProfile";
-
+import Setting from "./Components/Setting";
+import AddReportForm from "./Components/AddReportForm";
+import FavoritesScreen from "./Components/FavoritesScreen";
 function App() {
   return (
     <Router>
@@ -122,6 +124,9 @@ function App() {
         <Route path="prethyroid" element={<PreTFT />} />
         <Route path="prelipid" element={<PreLipidProfile />} />
         <Route path="precp" element={<PreBloodCP />} />
+        <Route path="settings" element={<Setting />} />
+        <Route path="aboutreport" element={<AddReportForm />} />
+        <Route path="fav" element={<FavoritesScreen />} />
       </Routes>
     </Router>
   );

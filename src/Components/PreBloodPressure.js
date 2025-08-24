@@ -206,43 +206,16 @@ const PreBloodPressure = () => {
       while (stmt.step()) {
         const row = stmt.getAsObject();
         if (row.vitalName?.toLowerCase() === "bloodpressure") {
-          const value = row.value;
-          let systolic = null;
-          let diastolic = null;
+          const value = parseFloat(row.value);
+
+          // apply gender+age‐based thresholds
           let isAbnormal = false;
-
-          // Expecting format like "120/80"
-          if (value.includes("/")) {
-            const [sysStr, diaStr] = value.split("/");
-            systolic = parseFloat(sysStr.trim());
-            diastolic = parseFloat(diaStr.trim());
-
-            if (isNaN(systolic) || isNaN(diastolic)) {
-              isAbnormal = true;
-            } else {
-              if (age < 18) {
-                isAbnormal =
-                  systolic < 90 ||
-                  systolic > 120 ||
-                  diastolic < 60 ||
-                  diastolic > 80;
-              } else if (gender === "female") {
-                isAbnormal =
-                  systolic < 90 ||
-                  systolic > 130 ||
-                  diastolic < 60 ||
-                  diastolic > 85;
-              } else {
-                isAbnormal =
-                  systolic < 95 ||
-                  systolic > 140 ||
-                  diastolic < 60 ||
-                  diastolic > 90;
-              }
-            }
+          if (age < 18) {
+            isAbnormal = isNaN(value) || value < 90 || value > 120;
+          } else if (gender === "female") {
+            isAbnormal = isNaN(value) || value < 90 || value > 130;
           } else {
-            // value doesn't contain '/', flag as abnormal
-            isAbnormal = true;
+            isAbnormal = isNaN(value) || value < 95 || value > 140;
           }
 
           rows.push({ ...row, isAbnormal });

@@ -20,6 +20,7 @@ const AddVital = () => {
       icon: <MonitorHeartIcon style={{ fontSize: "24px", color: "red" }} />,
       route: "/bp",
     },
+    // { name: "Sugar", route: "/sugar" },
   ];
   const navigate = useNavigate();
   const location = useLocation();

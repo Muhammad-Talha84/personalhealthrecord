@@ -46,7 +46,8 @@ function useDatabase() {
         date TEXT,
         time TEXT,
         minValue REAL,
-        maxValue REAL
+        maxValue REAL,
+        vitalNote TEXT
       );`,
 
       `CREATE TABLE IF NOT EXISTS LabReports (
@@ -60,7 +61,23 @@ function useDatabase() {
         date TEXT,
         time TEXT,
         minValue REAL,
-        maxValue REAL
+        maxValue REAL,
+        location TEXT,
+        labNote TEXT
+      );`,
+      `CREATE TABLE IF NOT EXISTS Settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vitalName TEXT NOT NULL,
+        gender TEXT NOT NULL,
+        minValue REAL,
+        maxValue REAL,
+        abnormalTestsPerDay INTEGER
+      );`,
+      `CREATE TABLE IF NOT EXISTS Favorites (
+        profileName TEXT,
+        itemType TEXT,
+        itemName TEXT,
+        PRIMARY KEY(profileName, itemType, itemName)
       );`,
     ];
 
@@ -72,6 +89,8 @@ function useDatabase() {
       `ALTER TABLE Vitals ADD COLUMN minValue REAL;`,
       `ALTER TABLE Vitals ADD COLUMN maxValue REAL;`,
       `ALTER TABLE LabReports ADD COLUMN parameter TEXT;`,
+      `ALTER TABLE LabReports ADD COLUMN location TEXT;`,
+      `ALERT TABLE Vitals ADD COLUMN vitalNote TEXT;`,
     ];
 
     alterStatements.forEach((stmt) => {
